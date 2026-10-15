@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  IN_REVIEW
+  CLOSED
+}
+
+enum LearningMode {
+  ONLINE
+  IN_PERSON
+}
+
+model Inquiry {
+  id                 String         @id @default(uuid()) @db.Uuid
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  fullName           String         @map("full_name") @db.VarChar(100)
+  email              String         @db.VarChar(254)
+  phone              String         @db.VarChar(20)
+  discipline         String         @db.VarChar(100)
+  skillLevel         String         @map("skill_level") @db.VarChar(50)
+  certificationGoals String         @map("certification_goals") @db.VarChar(1000)
+  preferredSchedule  String         @map("preferred_schedule") @db.VarChar(200)
+  learningMode       LearningMode   @map("learning_mode")
+  remarks            String?        @db.VarChar(2000)
+  privacyConsentAt   DateTime       @map("privacy_consent_at") @db.Timestamptz(3)
+  status             InquiryStatus  @default(NEW)
+  ipHash             String         @map("ip_hash") @db.Char(64)
+  duplicateKey       String         @unique(map: "inquiries_duplicate_key_key") @map("duplicate_key") @db.Char(64)
+  emailDeliveryError String?        @map("email_delivery_error") @db.VarChar(500)
+  portfolio          Portfolio?
+  auditLogs          AuditLog[]
+
+  @@index([createdAt(sort: Desc)], map: "inquiries_created_at_idx")
+  @@index([status, createdAt(sort: Desc)], map: "inquiries_status_created_at_idx")
+  @@index([discipline], map: "inquiries_discipline_idx")
+  @@index([ipHash, createdAt], map: "inquiries_ip_hash_created_at_idx")
+  @@map("inquiries")
+}
+
+model Portfolio {
+  id        String   @id @default(uuid()) @db.Uuid
+  inquiryId String   @unique(map: "portfolios_inquiry_id_key") @map("inquiry_id") @db.Uuid
+  fileName  String   @map("file_name") @db.VarChar(255)
+  mimeType  String   @map("mime_type") @db.VarChar(100)
+  byteSize  Int      @map("byte_size")
+  checksum  String   @db.Char(64)
+  content   Bytes
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  @@map("portfolios")
+}
+
+model AuditLog {
+  id         BigInt    @id @default(autoincrement())
+  inquiryId  String?   @map("inquiry_id") @db.Uuid
+  actor      String    @db.VarChar(254)
+  action     String    @db.VarChar(80)
+  metadata   Json?
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  inquiry    Inquiry?  @relation(fields: [inquiryId], references: [id], onDelete: SetNull)
+
+  @@index([inquiryId, createdAt(sort: Desc)], map: "audit_logs_inquiry_id_created_at_idx")
+  @@map("audit_logs")
+}
+
+model LoginAttempt {
+  id        BigInt   @id @default(autoincrement())
+  ipHash    String   @map("ip_hash") @db.Char(64)
+  succeeded Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([ipHash, createdAt], map: "login_attempts_ip_hash_created_at_idx")
+  @@map("login_attempts")
+}
