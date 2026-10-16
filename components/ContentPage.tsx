@@ -1,20 +1,28 @@
+import { ViewTransition } from "react";
 import { getSiteFragment } from "@/lib/site-content";
+import { withLayeredHeroArt } from "@/lib/hero-art";
 import type { PageSlug } from "@/lib/site";
 import { InquiryForm } from "@/components/InquiryForm";
 import Image from "next/image";
 
+// Only navigations started by SiteInteractions carry the "page" type, so
+// browser back/forward and in-page updates swap instantly instead of animating.
+const pageTransition = { page: "page-swap", default: "none" } as const;
+
 export async function ContentPage({ slug }: { slug: PageSlug }) {
-  const html = await getSiteFragment(slug);
+  const html = withLayeredHeroArt(await getSiteFragment(slug));
   const [before, after] = html.split("AIRAVUT_INQUIRY_SECTION_SLOT");
 
   return (
-    <main id="main" tabIndex={-1}>
-      <div className="page" data-page={slug}>
-        <div dangerouslySetInnerHTML={{ __html: before }} />
-        {after !== undefined ? <InquirySection /> : null}
-        {after !== undefined ? <div dangerouslySetInnerHTML={{ __html: after }} /> : null}
-      </div>
-    </main>
+    <ViewTransition enter={pageTransition} exit={pageTransition} default="none">
+      <main id="main" tabIndex={-1}>
+        <div className="page" data-page={slug}>
+          <div dangerouslySetInnerHTML={{ __html: before }} />
+          {after !== undefined ? <InquirySection /> : null}
+          {after !== undefined ? <div dangerouslySetInnerHTML={{ __html: after }} /> : null}
+        </div>
+      </main>
+    </ViewTransition>
   );
 }
 

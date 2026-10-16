@@ -1,0 +1,186 @@
+{
+  "/media/home-hero-education.svg": {
+    "base": "/media/layers/home-hero-education.base.svg",
+    "dust": "/media/layers/home-hero-education.dust.svg",
+    "rings": [
+      {
+        "src": "/media/layers/home-hero-education.ring0.svg",
+        "x": 81.25,
+        "y": 51.852,
+        "size": 35.729
+      },
+      {
+        "src": "/media/layers/home-hero-education.ring1.svg",
+        "x": 81.25,
+        "y": 51.852,
+        "size": 58.125
+      }
+    ],
+    "dial": null,
+    "core": {
+      "x": 81.25,
+      "y": 51.852,
+      "r": 4.167
+    }
+  },
+  "/media/home-hero-ecosystem.svg": {
+    "base": "/media/layers/home-hero-ecosystem.base.svg",
+    "dust": "/media/layers/home-hero-ecosystem.dust.svg",
+    "rings": [
+      {
+        "src": "/media/layers/home-hero-ecosystem.ring0.svg",
+        "x": 75,
+        "y": 30.556,
+        "size": 18.542
+      },
+      {
+        "src": "/media/layers/home-hero-ecosystem.ring1.svg",
+        "x": 63.021,
+        "y": 66.667,
+        "size": 18.542
+      },
+      {
+        "src": "/media/layers/home-hero-ecosystem.ring2.svg",
+        "x": 87.5,
+        "y": 66.667,
+        "size": 18.542
+      }
+    ],
+    "dial": null,
+    "core": {
+      "x": 75.156,
+      "y": 54.63,
+      "r": 2.813
+    }
+  },
+  "/media/home-hero-global.svg": {
+    "base": "/media/layers/home-hero-global.base.svg",
+    "dust": "/media/layers/home-hero-global.dust.svg",
+    "rings": [],
+    "dial": null,
+    "core": {
+      "x": 62.24,
+      "y": 66.481,
+      "r": 3.646
+    }
+  },
+  "/media/ecosystem-hero.svg": {
+    "base": "/media/layers/ecosystem-hero.base.svg",
+    "dust": "/media/layers/ecosystem-hero.dust.svg",
+    "rings": [
+      {
+        "src": "/media/layers/ecosystem-hero.ring0.svg",
+        "x": 69.792,
+        "y": 31.481,
+        "size": 16.25
+      },
+      {
+        "src": "/media/layers/ecosystem-hero.ring1.svg",
+        "x": 60.771,
+        "y": 59.259,
+        "size": 16.25
+      },
+      {
+        "src": "/media/layers/ecosystem-hero.ring2.svg",
+        "x": 78.815,
+        "y": 59.259,
+        "size": 16.25
+      }
+    ],
+    "dial": null,
+    "core": {
+      "x": 69.792,
+      "y": 50,
+      "r": 2.604
+    }
+  },
+  "/media/accreditations-hero.svg": {
+    "base": "/media/layers/accreditations-hero.base.svg",
+    "dust": "/media/layers/accreditations-hero.dust.svg",
+    "rings": [
+      {
+        "src": "/media/layers/accreditations-hero.ring0.svg",
+        "x": 69.792,
+        "y": 50,
+        "size": 27.083
+      },
+      {
+        "src": "/media/layers/accreditations-hero.ring1.svg",
+        "x": 69.792,
+        "y": 50,
+        "size": 41.667
+      }
+    ],
+    "dial": {
+      "src": "/media/layers/accreditations-hero.dial.svg",
+      "x": 69.792,
+      "y": 50,
+      "size": 29.167
+    },
+    "core": {
+      "x": 69.792,
+      "y": 50,
+      "r": 3.125
+    }
+  },
+  "/media/leadership-hero.svg": {
+    "base": "/media/layers/leadership-hero.base.svg",
+    "dust": "/media/layers/leadership-hero.dust.svg",
+    "rings": [
+      {
+        "src": "/media/layers/leadership-hero.ring0.svg",
+        "x": 64.583,
+        "y": 50,
+        "size": 23.75
+      }
+    ],
+    "dial": null,
+    "core": {
+      "x": 64.583,
+      "y": 50,
+      "r": 4.688
+    }
+  },
+  "/media/careers-hero.svg": {
+    "base": "/media/layers/careers-hero.base.svg",
+    "dust": "/media/layers/careers-hero.dust.svg",
+    "rings": [
+      {
+        "src": "/media/layers/careers-hero.ring0.svg",
+        "x": 57.813,
+        "y": 73.148,
+        "size": 37.292
+      },
+      {
+        "src": "/media/layers/careers-hero.ring1.svg",
+        "x": 57.813,
+        "y": 73.148,
+        "size": 61.25
+      }
+    ],
+    "dial": null,
+    "core": {
+      "x": 57.813,
+      "y": 73.148,
+      "r": 3.646
+    }
+  },
+  "/media/contact-hero.svg": {
+    "base": "/media/layers/contact-hero.base.svg",
+    "dust": "/media/layers/contact-hero.dust.svg",
+    "rings": [
+      {
+        "src": "/media/layers/contact-hero.ring0.svg",
+        "x": 71.875,
+        "y": 50,
+        "size": 28.958
+      }
+    ],
+    "dial": null,
+    "core": {
+      "x": 71.875,
+      "y": 50,
+      "r": 5.729
+    }
+  }
+}

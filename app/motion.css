@@ -1,0 +1,489 @@
+/* ==========================================================================
+   Airavut motion system
+   Principles
+   - Ambient loops animate only transform / translate / rotate / scale / opacity,
+     so they run on the compositor and never trigger style or layout work.
+   - Scroll parallax uses CSS scroll-driven animations (compositor) where supported;
+     other browsers simply get the static artwork.
+   - GSAP (lib/motion) is reserved for one-shot choreography: intros, reveals, counters.
+   - One easing family across the site; each page gets its own choreography.
+   ========================================================================== */
+
+:root {
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-premium: cubic-bezier(.25, 1, .5, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --ease-in: cubic-bezier(.55, 0, .75, .2);
+  --motion-fast: 200ms;
+  --motion-med: 420ms;
+}
+
+.sr-only {
+  position: absolute!important; width: 1px!important; height: 1px!important; padding: 0!important; margin: -1px!important;
+  overflow: hidden!important; clip: rect(0,0,0,0)!important; white-space: nowrap!important; border: 0!important;
+}
+
+/* --------------------------------------------------------------------------
+   Pre-paint intro state. `.motion` is set by the boot script before first paint;
+   `.motion-live` is set once GSAP owns the intro; `.motion-failsafe` reveals
+   everything if scripts never arrive.
+   -------------------------------------------------------------------------- */
+.motion:not(.motion-live):not(.motion-failsafe) :is(.ihero .hero-inner > *, .hero .swiper-slide:first-child .slide-copy > *, .hero-ctrl, .art .art-orbit, .art .art-dust) {
+  opacity: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Layered hero artwork (markup from lib/hero-art.ts)
+   -------------------------------------------------------------------------- */
+.art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  container-type: size;
+  --ax: 100%;
+}
+/* Reproduces object-fit: cover + object-position: var(--ax) center, so every layer
+   can be positioned in artwork percentages. */
+.art-stage {
+  position: absolute;
+  top: 50%;
+  left: var(--ax);
+  width: max(100cqw, 177.78cqh);
+  height: max(100cqh, 56.25cqw);
+  translate: calc(var(--ax) * -1) -50%;
+}
+.art-plane { position: absolute; inset: 0; }
+.art-base, .art-dust { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; }
+.art-base {
+  transform-origin: var(--cx) var(--cy);
+  animation: art-breathe 26s ease-in-out infinite alternate;
+}
+.art-dust { animation: dust-drift 15s ease-in-out infinite alternate; }
+.art-ring, .art-dial, .art-core, .art-ripples {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: auto;
+  aspect-ratio: 1;
+  max-width: none;
+  translate: -50% -50%;
+}
+.art-ring { animation: art-spin var(--spin, 150s) linear infinite; }
+.art-ring:nth-of-type(even) { animation-direction: reverse; --spin: 190s; }
+.art-dial { animation: art-spin 240s linear infinite reverse; }
+.art-core {
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,246,214,.34) 0%, rgba(242,217,138,.14) 32%, rgba(155,107,255,.06) 52%, transparent 70%);
+  animation: core-breathe 5.5s ease-in-out infinite alternate;
+}
+.art-ripples { display: none; }
+.art-ripples i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(242,217,138,.5);
+  box-shadow: 0 0 24px rgba(242,217,138,.12), inset 0 0 24px rgba(155,107,255,.12);
+  opacity: 0;
+  animation: ripple 7.5s var(--ease-out) infinite;
+}
+.art-ripples i:nth-child(2) { animation-delay: -2.5s; }
+.art-ripples i:nth-child(3) { animation-delay: -5s; }
+
+/* Off-screen heroes and sections stop their loops (toggled by IntersectionObserver). */
+.is-offscreen *, .is-offscreen::after, .is-offscreen > .sec-art { animation-play-state: paused!important; }
+
+/* Page identities: same artwork language, different rhythm. */
+[data-art="ecosystem-hero"] .art-ring { --spin: 90s; }
+[data-art="ecosystem-hero"] .art-ring:nth-of-type(2) { --spin: 120s; }
+[data-art="ecosystem-hero"] .art-ring:nth-of-type(3) { --spin: 105s; }
+[data-art="accreditations-hero"] .art-ring { --spin: 170s; }
+[data-art="accreditations-hero"] .art-ring:nth-of-type(even) { --spin: 130s; }
+[data-art="leadership-hero"] .art-ring { --spin: 210s; }
+[data-art="leadership-hero"] .art-core { animation-duration: 4s; }
+[data-art="careers-hero"] .art-ring { --spin: 80s; }
+[data-art="careers-hero"] .art-ring:nth-of-type(even) { --spin: 120s; }
+[data-art="careers-hero"] .art-dust { animation-name: dust-rise; animation-duration: 11s; }
+[data-art="contact-hero"] .art-ripples { display: block; }
+[data-art="contact-hero"] .art-ring { --spin: 160s; }
+[data-art="home-hero-global"] .art-base { animation-duration: 34s; }
+
+@keyframes art-spin { to { rotate: 360deg; } }
+/* Large layers drift and breathe in opacity only: scaling them would force re-rasterisation. */
+@keyframes art-breathe { from { translate: 0 0; } to { translate: -1.2% -.8%; } }
+@keyframes dust-drift { from { translate: -6px 6px; } to { translate: 8px -12px; } }
+@keyframes dust-rise { from { translate: -10px 10px; } to { translate: 14px -22px; } }
+@keyframes core-breathe { from { scale: .84; } to { scale: 1.14; } }
+@keyframes ripple { 0% { scale: .22; opacity: 0; } 12% { opacity: .85; } 100% { scale: 1; opacity: 0; } }
+
+/* --------------------------------------------------------------------------
+   Inner page heroes
+   -------------------------------------------------------------------------- */
+/* Soft hand-off into the first section instead of a hard edge. */
+.ihero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(10,16,34,0), var(--navy)); }
+.hero .slide::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16%; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(10,16,34,0), var(--navy)); }
+.ihero .art { z-index: 0; }
+.hero-inner .display .line-mask, .slide-copy .display .line-mask { overflow: clip; overflow-clip-margin: .14em; padding-bottom: .04em; }
+
+/* --------------------------------------------------------------------------
+   Home carousel
+   -------------------------------------------------------------------------- */
+.hero.swiper .swiper-wrapper { min-height: inherit; }
+.hero.swiper .slide {
+  position: relative;
+  inset: auto;
+  height: auto;
+  min-height: inherit;
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  visibility: visible;
+  transition: none;
+  overflow: hidden;
+}
+.hero.swiper .slide-copy { flex: 1; height: auto; }
+.hero.swiper:not(.swiper-initialized) .slide { opacity: 0; visibility: hidden; }
+.hero.swiper:not(.swiper-initialized) .slide:first-child { opacity: 1; visibility: visible; }
+/* Split-screen reveal: two shutters part from the artwork's centre line. */
+.slide-shutters { position: absolute; inset: 0; z-index: 0; pointer-events: none; display: flex; }
+.slide-shutters i { flex: 1; background: var(--navy); transform: scaleX(0); }
+.slide-shutters i:first-child { transform-origin: left center; }
+.slide-shutters i:last-child { transform-origin: right center; }
+
+.carousel-actions { display: flex; align-items: center; gap: 6px; }
+.hero-arrow {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(201,209,234,.3);
+  background: rgba(10,16,34,.55);
+  color: #fff;
+  cursor: pointer;
+  font-size: 19px;
+  transition: transform var(--motion-fast) var(--ease-premium), border-color var(--motion-fast), background-color var(--motion-fast);
+}
+.hero-arrow span { display: inline-block; transition: translate var(--motion-med) var(--ease-out); }
+.hero-arrow:hover, .hero-arrow:focus-visible { transform: scale(1.08); border-color: var(--gold-l); background-color: rgba(242,217,138,.12); }
+.hero-prev:hover span { translate: -3px 0; }
+.hero-next:hover span { translate: 3px 0; }
+.hero-arrow:active { transform: scale(.94); }
+.ind span { position: relative; overflow: hidden; transition: width .5s var(--ease-out), background-color .3s; }
+.ind span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold), var(--gold-l));
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.ind.is-active span { background: rgba(201,209,234,.22); }
+/* Autoplay progress runs on the compositor; JS only pauses/resumes it. */
+.ind.is-active span::after { animation: ind-progress var(--autoplay, 7000ms) linear forwards; }
+.hero[data-playback="paused"] .ind.is-active span::after { animation-play-state: paused; }
+.hero[data-playback="off"] .ind.is-active span::after { animation: none; transform: scaleX(1); }
+.ind:hover span { background: rgba(201,209,234,.6); }
+.pause { transition: transform var(--motion-fast) var(--ease-premium), border-color var(--motion-fast), background-color var(--motion-fast); }
+.pause:hover, .pause:focus-visible { transform: scale(1.07); border-color: var(--gold-l); background-color: rgba(242,217,138,.1); }
+@keyframes ind-progress { to { transform: scaleX(1); } }
+
+/* --------------------------------------------------------------------------
+   Hero scroll-out: multi-layer parallax, driven by the hero's own view timeline.
+   -------------------------------------------------------------------------- */
+@supports (animation-timeline: view()) {
+  .hero, .ihero { view-timeline: --hero block; }
+  .hero .art-stage, .ihero .art-stage { animation: hero-art-out linear both; animation-timeline: --hero; animation-range: exit 0% exit 100%; }
+  .hero .art-orbit, .ihero .art-orbit { animation: hero-orbit-out linear both; animation-timeline: --hero; animation-range: exit 0% exit 100%; }
+  .ihero .wrap, .hero .slide-copy { animation: hero-copy-out linear both; animation-timeline: --hero; animation-range: exit 0% exit 90%; }
+}
+@keyframes hero-art-out { to { transform: translateY(18%); } }
+/* Individual properties, so GSAP's pointer parallax (transform) on the same plane still composes. */
+@keyframes hero-orbit-out { to { translate: 0 -12%; } }
+@keyframes hero-copy-out { to { transform: translateY(-14vh); opacity: 0; } }
+
+/* --------------------------------------------------------------------------
+   Section atmosphere
+   -------------------------------------------------------------------------- */
+/* No time-based loop on section art: most of it is lazy-loaded, and Chrome cannot composite
+   an animation on an image that has not painted yet, so it would tick the main thread every
+   frame. Sections get their life from scroll parallax (below) and the drifting colour orbs. */
+@supports (animation-timeline: view()) {
+  .sec > .sec-art, .site-foot > .sec-art { top: -60px; height: calc(100% + 120px); }
+  .sec > .sec-art, .site-foot > .sec-art {
+    animation: sec-parallax linear both;
+    animation-timeline: view();
+    animation-range: cover 0% cover 100%;
+  }
+  @keyframes sec-parallax { from { translate: 0 -50px; } to { translate: 0 50px; } }
+}
+/* Soft colour orbs; a radial gradient is already soft, so no blur filter is needed. */
+.sec::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: clamp(240px, 32vw, 620px);
+  aspect-ratio: 1;
+  right: -10%;
+  top: 8%;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(155,107,255,.11), rgba(91,140,255,.04) 46%, transparent 70%);
+  animation: orb-float 16s ease-in-out infinite alternate;
+}
+.sec:nth-of-type(even)::after { right: auto; left: -12%; top: auto; bottom: 4%; animation-delay: -8s; }
+@keyframes orb-float { from { translate: -3% 0; opacity: .5; } to { translate: 6% 5%; opacity: 1; } }
+
+/* --------------------------------------------------------------------------
+   Header & navigation
+   -------------------------------------------------------------------------- */
+.site-head { view-transition-name: site-header; transition: background-color .3s, border-color .3s, translate .55s var(--ease-out); }
+.site-head.is-tucked { translate: 0 -100%; }
+.mainnav ul { position: relative; }
+.mainnav ul a { position: relative; transition: color var(--motion-fast); }
+.nav-indicator {
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-l));
+  transform-origin: left center;
+  transition: transform .6s var(--ease-out), opacity .3s;
+  pointer-events: none;
+}
+.has-indicator ul a[aria-current] { border-color: transparent; }
+.mainnav ul a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: rgba(242,217,138,.45);
+  transform: scaleX(0);
+  transition: transform .45s var(--ease-out);
+}
+.mainnav ul a:hover::after { transform: scaleX(1); }
+.mainnav ul a[aria-current]::after { display: none; }
+.nav-cta { transition: background-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast) var(--ease-premium); }
+.nav-cta:active { transform: scale(.97); }
+.brand img { transition: transform .5s var(--ease-out); }
+.brand:hover img { transform: scale(1.03); }
+html.is-navigating { cursor: progress; }
+
+@media (max-width: 1180px) {
+  .nav-indicator { display: none; }
+  .mainnav {
+    display: flex!important;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: opacity .25s var(--ease-premium), transform .3s var(--ease-premium), visibility 0s linear .3s;
+  }
+  .mainnav.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition: opacity .35s var(--ease-out), transform .45s var(--ease-out), visibility 0s;
+  }
+  .mainnav ul a::after { display: none; }
+  .mainnav li, .mainnav .nav-cta { opacity: 0; translate: 0 12px; transition: opacity .2s, translate .2s; }
+  .mainnav.is-open li, .mainnav.is-open .nav-cta { opacity: 1; translate: 0 0; transition: opacity .45s var(--ease-out), translate .55s var(--ease-out); }
+  .mainnav.is-open li:nth-child(1) { transition-delay: .04s; }
+  .mainnav.is-open li:nth-child(2) { transition-delay: .08s; }
+  .mainnav.is-open li:nth-child(3) { transition-delay: .12s; }
+  .mainnav.is-open li:nth-child(4) { transition-delay: .16s; }
+  .mainnav.is-open li:nth-child(5) { transition-delay: .2s; }
+  .mainnav.is-open .nav-cta { transition-delay: .26s; }
+}
+
+/* --------------------------------------------------------------------------
+   Page transitions (React <ViewTransition> + the View Transitions API)
+   -------------------------------------------------------------------------- */
+::view-transition { pointer-events: none; }
+::view-transition-old(.page-swap) { animation: page-out 240ms var(--ease-in) both; }
+::view-transition-new(.page-swap) { animation: page-in 560ms var(--ease-out) 140ms both; }
+::view-transition-group(site-header) { animation: none; z-index: 100; }
+::view-transition-old(site-header) { display: none; }
+::view-transition-new(site-header) { animation: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 260ms; }
+@keyframes page-out { to { opacity: 0; transform: translateY(-14px) scale(.995); } }
+@keyframes page-in { from { opacity: 0; transform: translateY(28px); } }
+
+/* --------------------------------------------------------------------------
+   Interactive components
+   -------------------------------------------------------------------------- */
+.btn { position: relative; overflow: hidden; isolation: isolate; transition: background-color var(--motion-fast), color var(--motion-fast), box-shadow .35s var(--ease-premium), translate .35s var(--ease-out), border-color var(--motion-fast); }
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: -100% 35%;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent, rgba(255,255,255,.42), transparent);
+  transform: translateX(-240%) rotate(12deg);
+  transition: transform .8s var(--ease-out);
+}
+.btn:hover { translate: 0 -2px; box-shadow: 0 14px 35px rgba(0,0,0,.22), 0 0 0 1px rgba(242,217,138,.25); }
+.btn:hover::after { transform: translateX(240%) rotate(12deg); }
+.btn:active { translate: 0 0; scale: .98; }
+.btn:focus-visible, .textlink:focus-visible, .ulink:focus-visible, .ind:focus-visible, .pause:focus-visible, .hero-arrow:focus-visible { outline: 2px solid var(--gold-l); outline-offset: 4px; }
+.ulink { text-decoration: none; background: linear-gradient(var(--violet), var(--violet)) left calc(100% - 0px) / 100% 1px no-repeat; padding-bottom: 6px; transition: color var(--motion-fast), background-size .5s var(--ease-out); }
+.ulink:hover { background-image: linear-gradient(var(--gold-l), var(--gold-l)); animation: ulink-sweep .6s var(--ease-out); }
+@keyframes ulink-sweep { from { background-size: 0% 1px; } to { background-size: 100% 1px; } }
+.textlink::after { transition: translate .4s var(--ease-out); }
+.textlink:hover::after { transform: none; translate: 5px 0; }
+
+.card { position: relative; transition: border-color .35s, box-shadow .45s var(--ease-premium), translate .5s var(--ease-out); }
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 0%), rgba(242,217,138,.11), transparent 55%);
+  opacity: 0;
+  transition: opacity .45s;
+}
+.card:hover { translate: 0 -4px; border-color: rgba(242,217,138,.42); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 26px 70px rgba(0,0,0,.24); }
+.card:hover::before { opacity: 1; }
+.card .iring, .tile .iring, .reach .iring { transition: transform .55s var(--ease-out), box-shadow .55s var(--ease-premium), border-color .5s; }
+.card:hover .iring, .card:focus-within .iring, .reach > div:hover .iring {
+  transform: translateY(-3px) rotate(-6deg) scale(1.07);
+  border-color: rgba(255,235,181,.85);
+  box-shadow: 0 0 36px rgba(242,217,138,.3), inset 0 0 20px rgba(155,107,255,.3);
+}
+.role { transition: color var(--motion-fast), padding-left .4s var(--ease-out); }
+.role:hover { padding-left: 6px; }
+.vrow { transition: background-color .35s; }
+.vrow:not(.vhead):hover { background-color: rgba(242,217,138,.035); }
+.chips span, .flow .pill { transition: border-color .3s, background-color .3s, translate .4s var(--ease-out); }
+.chips span:hover, .flow .pill:hover { translate: 0 -2px; border-color: rgba(242,217,138,.65); background-color: rgba(242,217,138,.07); }
+.photo { transition: box-shadow .8s var(--ease-premium); }
+.founder .photo:hover { box-shadow: 0 0 0 clamp(14px,2vw,32px) rgba(155,107,255,.14), 0 0 0 clamp(28px,4vw,64px) rgba(91,140,255,.08), 0 0 140px rgba(242,217,138,.36); }
+
+/* Seals turn gently with scroll position (compositor-driven). */
+@supports (animation-timeline: view()) {
+  .seal { animation: seal-turn linear both; animation-timeline: view(); animation-range: cover; }
+  @keyframes seal-turn { from { rotate: -14deg; } to { rotate: 14deg; } }
+}
+
+/* Journey / pathway: the connecting line fills as the section scrolls through. */
+.journey::after, .lppc::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+.journey::after { left: 6%; right: 6%; top: 29px; height: 2px; background: linear-gradient(90deg, var(--gold-l), var(--violet)); box-shadow: 0 0 12px rgba(242,217,138,.5); }
+.lppc::after { left: 12.5%; right: 12.5%; top: 59px; height: 4px; border-radius: 4px; background: linear-gradient(90deg, #FFEBB5, var(--gold-l), var(--violet), var(--blue)); box-shadow: 0 0 16px rgba(242,217,138,.45); }
+.journey.in::after, .lppc.in::after { transform: scaleX(1); transition: transform 1.8s var(--ease-in-out) .2s; }
+@supports (animation-timeline: view()) {
+  .journey::after, .lppc::after { transition: none!important; animation: line-fill linear both; animation-timeline: view(); animation-range: entry 60% cover 55%; }
+  @keyframes line-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+}
+.jnode, .lnode { transition: box-shadow .6s var(--ease-premium), background-color .6s, scale .5s var(--ease-out); }
+.journey li:hover .jnode, .lppc li:hover .lnode { scale: 1.08; box-shadow: 0 0 0 10px rgba(155,107,255,.18), 0 0 30px rgba(242,217,138,.35); }
+
+/* Ticker */
+.motion-marquee { width: max-content; max-width: none; flex-wrap: nowrap!important; animation: content-marquee 26s linear infinite; }
+.motion-marquee li:first-child::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); margin: 0 18px; }
+.marquee-viewport { overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.marquee-viewport:hover .motion-marquee { animation-play-state: paused; }
+@keyframes content-marquee { to { transform: translate3d(-50%,0,0); } }
+
+/* Forms */
+.form-step { transform-origin: center; }
+.inquiry-form[data-direction="back"] .form-step { animation-name: step-in-back; }
+.choice-row label { transition: translate var(--motion-fast) var(--ease-premium), border-color var(--motion-fast), background-color var(--motion-fast); }
+.choice-row label:hover, .choice-row label:focus-within { translate: 0 -2px; border-color: rgba(242,217,138,.55); background-color: rgba(242,217,138,.06); }
+.enq input, .enq select, .enq textarea { transition: border-color .25s, box-shadow .35s var(--ease-premium), background-color .25s; }
+.enq input:hover, .enq select:hover, .enq textarea:hover { border-color: rgba(201,209,234,.4); }
+.field-error { animation: validation-in .28s var(--ease-premium) both; }
+.progress-track span { transition: width .6s var(--ease-out); }
+.step-list li > span { transition: background-color .4s, border-color .4s, color .4s, scale .4s var(--ease-out); }
+.step-list .active > span { scale: 1.1; }
+.success-mark { animation: success-arrive .75s var(--ease-premium) both, success-glow 2.2s ease-in-out .75s infinite alternate; }
+.form-actions .btn span { display: inline-block; transition: transform var(--motion-fast) var(--ease-premium); }
+.form-actions .btn:hover span { transform: translateX(4px); }
+.submit-spinner { width: 17px; height: 17px; margin-right: 9px; vertical-align: -3px; border: 2px solid rgba(10,16,34,.28); border-top-color: var(--navy); border-radius: 50%; animation: submit-spin .75s linear infinite; }
+@keyframes step-in-back { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+@keyframes validation-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes success-arrive { 0% { opacity: 0; transform: scale(.55) rotate(-18deg); } 70% { transform: scale(1.08) rotate(3deg); } 100% { opacity: 1; transform: none; } }
+@keyframes success-glow { from { opacity: .9; } to { opacity: 1; } }
+@keyframes submit-spin { to { transform: rotate(360deg); } }
+
+/* --------------------------------------------------------------------------
+   Scroll reveals (lib/motion/scroll-motion.ts adds .rv-* and then .in).
+   Pure transform/opacity transitions: they run on the compositor, so reveals
+   that fire mid-scroll never compete with scrolling for the main thread.
+   The doubled class outranks component transitions, and the list keeps their
+   hover transitions (translate, border, shadow, background) working.
+   -------------------------------------------------------------------------- */
+.rv.rv {
+  transition-property: opacity, transform, translate, border-color, box-shadow, background-color;
+  transition-duration: .9s, 1.15s, .5s, .35s, .45s, .35s;
+  transition-timing-function: var(--ease-out);
+  transition-delay: var(--d, 0ms), var(--d, 0ms), 0s, 0s, 0s, 0s;
+}
+.rv-rise:not(.in) { opacity: 0; transform: translate3d(0, 48px, 0); }
+.page:not([data-page="home"]) :is(.grid2,.grid3,.grid4,.pcards,.trio,.pair,.addr) > .rv-rise:not(.in) { transform: none; }
+.rv-slide:not(.in) { opacity: 0; transform: translate3d(-32px, 0, 0); }
+.rv.rv-pop { transition-duration: .5s, .8s, .5s, .35s, .45s, .35s; transition-timing-function: var(--ease-out), cubic-bezier(.34, 1.56, .64, 1); }
+.rv-pop:not(.in) { opacity: 0; transform: scale(.45); }
+.rv.rv-iris { transition-duration: 1.2s, 1.7s, .5s, .35s, .8s, .35s; }
+.rv-iris:not(.in) { opacity: 0; transform: scale(.7); }
+.rv-iris img { transition: transform 2.2s var(--ease-out) var(--d, 0ms); }
+.rv-iris:not(.in) img { transform: scale(1.3); }
+.rv.rv-lines, .rv.rv-draw { transition: none; }
+.rv-lines .line { transition: transform 1.15s var(--ease-out) calc(var(--d, 0ms) + var(--li, 0) * 90ms); }
+.rv-lines:not(.in) .line { transform: translate3d(0, 112%, 0); }
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .art { --ax: 72%; }
+  .slide .art, .ihero .art { opacity: .6; }
+  .art-dust { animation: none; }
+  .hero-ctrl { gap: 12px; }
+  .carousel-actions { gap: 2px; }
+  .hero-arrow { width: 42px; height: 42px; }
+  .ind { width: 34px; }
+  .ind span { width: 24px; }
+  .ind.is-active { width: 48px; }
+  .ind.is-active span { width: 40px; }
+  .pause { margin-left: 2px; }
+  .journey {
+    grid-template-columns: repeat(8, minmax(145px, 1fr));
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    padding: 12px 8px 24px;
+  }
+  .journey > li { scroll-snap-align: center; }
+  .journey::after, .lppc::after { display: none; }
+  .sec::after { opacity: .6; }
+  .card:hover { translate: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion: keep fades for meaning, drop movement and loops.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms!important; animation-iteration-count: 1!important; transition-duration: .01ms!important; scroll-behavior: auto!important; }
+  .art *, .sec-art, .sec::after, .motion-marquee, .seal, .hero .art-stage, .ihero .art-stage, .art-orbit, .ihero .wrap, .slide-copy { animation: none!important; }
+  .art-ripples { display: none!important; }
+  .motion-marquee { width: auto; flex-wrap: wrap!important; }
+  .journey::after, .lppc::after { transform: scaleX(1); }
+  ::view-transition-old(*), ::view-transition-new(*), ::view-transition-group(*) { animation-duration: 0s!important; animation-delay: 0s!important; }
+}

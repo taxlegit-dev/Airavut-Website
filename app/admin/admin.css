@@ -1,16 +1,16 @@
 body:has(.admin-shell) > .skip,body:has(.admin-shell) > div:has(> .site-head),body:has(.admin-shell) > div:has(> .site-foot){display:none}
-.admin-shell { min-height: 100vh; background: #070b18; color: #f7f8ff; font-family: 'DM Sans',system-ui,sans-serif; }
-.admin-shell h1,.admin-shell h2,.admin-shell button,.admin-shell input,.admin-shell select { font-family: 'Poppins',system-ui,sans-serif; }
+.admin-shell { min-height: 100vh; background: #070b18; color: #f7f8ff; font-family: var(--ff-body); }
+.admin-shell h1,.admin-shell h2,.admin-shell button,.admin-shell input,.admin-shell select { font-family: var(--ff-display); }
 .admin-main { width: min(1480px,calc(100% - 40px)); margin: 0 auto; padding: 56px 0 100px; }
 .admin-topbar,.detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; margin-bottom: 34px; }
 .admin-topbar h1,.detail-head h1 { margin: 2px 0 4px; font-size: clamp(34px,4vw,62px); font-weight: 300; }
 .admin-topbar p,.detail-head p { color: #9ea8c9; }
-.admin-kicker { color: #f2d98a!important; text-transform: uppercase; letter-spacing: .15em; font: 500 12px 'Poppins',sans-serif; }
+.admin-kicker { color: #f2d98a!important; text-transform: uppercase; letter-spacing: .15em; font: 500 12px var(--ff-display); }
 .metric-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 20px; }
 .metric-grid article,.admin-panel,.admin-login-card { background: rgba(18,28,62,.78); border: 1px solid rgba(155,107,255,.24); border-radius: 18px; }
 .metric-grid article { padding: 22px; }
 .metric-grid span { display: block; color: #9ea8c9; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
-.metric-grid strong { display: block; margin-top: 10px; color: #f2d98a; font: 300 38px 'Poppins',sans-serif; }
+.metric-grid strong { display: block; margin-top: 10px; color: #f2d98a; font: 300 38px var(--ff-display); }
 .admin-panel { padding: 24px; }
 .filters { display: grid; grid-template-columns: 1.5fr repeat(5,1fr) auto auto; gap: 12px; align-items: end; }
 .filters label,.admin-login-card label { color: #c9d1ea; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }

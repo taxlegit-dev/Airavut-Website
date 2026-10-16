@@ -11,7 +11,7 @@ export const pages = {
   ecosystem: {
     slug: "ecosystem",
     path: "/ecosystem",
-    title: "Ecosystem | Ikigai Schools, Exams & Publishing | Airavut",
+    title: "Ecosystem | Ikigai Schools, Ikigai Exams & Certifications, and Ikigai Publishing | Airavut",
     description:
       "Explore Airavut’s connected performing arts ecosystem spanning structured learning, examinations, certification and publishing."
   },

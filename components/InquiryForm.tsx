@@ -58,6 +58,7 @@ function firstInvalidField(step: number, form: HTMLFormElement): FieldErrors {
 
 export function InquiryForm() {
   const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -95,6 +96,7 @@ export function InquiryForm() {
       }
     }
     setErrors({});
+    setDirection(direction === 1 ? "forward" : "back");
     setStep((current) => Math.min(steps.length - 1, Math.max(0, current + direction)));
   };
 
@@ -144,7 +146,7 @@ export function InquiryForm() {
   }
 
   return (
-    <form className="card enq inquiry-form" id="talk-to-us-form" ref={formRef} onSubmit={submit} noValidate>
+    <form className="card enq inquiry-form" data-direction={direction} id="talk-to-us-form" ref={formRef} onSubmit={submit} noValidate aria-busy={status === "submitting"}>
       <div className="inquiry-heading">
         <div>
           <p className="eyebrow">Applicant inquiry</p>
@@ -193,7 +195,7 @@ export function InquiryForm() {
       {message ? <p className="form-status" role="alert">{message}</p> : null}
       <div className="form-actions">
         {step > 0 ? <button type="button" className="btn btn-ghost" onClick={() => move(-1)} disabled={status === "submitting"}>Back</button> : <span />}
-        {step < steps.length - 1 ? <button type="button" className="btn" onClick={() => move(1)}>Continue <span aria-hidden="true">→</span></button> : <button type="submit" className="btn" disabled={status === "submitting"}>{status === "submitting" ? "Submitting…" : "Submit inquiry"}</button>}
+        {step < steps.length - 1 ? <button type="button" className="btn" onClick={() => move(1)}>Continue <span aria-hidden="true">→</span></button> : <button type="submit" className="btn" disabled={status === "submitting"}>{status === "submitting" ? <><span className="submit-spinner" aria-hidden="true" />Submitting…</> : "Submit inquiry"}</button>}
       </div>
       {siteKey ? <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" strategy="lazyOnload" onLoad={renderTurnstile} /> : null}
     </form>

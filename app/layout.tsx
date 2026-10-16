@@ -1,10 +1,23 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { DM_Sans, Poppins } from "next/font/google";
+import "swiper/css";
+import "swiper/css/effect-fade";
 import "./site-theme.css";
 import "./globals.css";
+import "./motion.css";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { SiteInteractions } from "@/components/SiteInteractions";
 import { siteUrl } from "@/lib/site";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-poppins"
+});
+const dmSans = DM_Sans({ subsets: ["latin"], display: "swap", variable: "--font-dm-sans" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -36,7 +49,7 @@ const organization = {
   address: [
     {
       "@type": "PostalAddress",
-      streetAddress: "H-2, Community Center Rd, Sector 116",
+      streetAddress: "H-2, Community Centre Road, Sector 116",
       addressLocality: "Noida",
       addressRegion: "Uttar Pradesh",
       postalCode: "201316",
@@ -56,9 +69,16 @@ const organization = {
   }))
 };
 
+// Runs before first paint: opts the document into intro choreography (CSS hides the
+// intro elements until GSAP takes over) and reveals everything if scripts never arrive.
+const motionBoot = `(function(d){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;d.classList.add("motion");setTimeout(function(){d.classList.add("motion-failsafe")},3500)})(document.documentElement)`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${poppins.variable} ${dmSans.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: motionBoot }} />
+      </head>
       <body>
         <a className="skip" href="#main">Skip to content</a>
         <SiteHeader />
