@@ -43,7 +43,8 @@ try {
 
   // Carousel controls.
   assert.equal(await status(page), "Highlight 1 of 3");
-  await page.locator(".hero-next").click();
+  assert.equal(await page.locator(".hero-arrow").count(), 0, "carousel should have no arrow buttons");
+  await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(1300);
   assert.equal(await status(page), "Highlight 2 of 3");
   await page.locator(".ind").first().click();

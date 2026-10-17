@@ -15,13 +15,12 @@ The public website is available at `/`, and authorized administration is at `/ad
 
 ## External configuration
 
-- PostgreSQL is required for inquiries, private portfolio files, audit logs and login rate limiting.
+- PostgreSQL is required for inquiries, audit logs and login rate limiting.
 - Cloudflare Turnstile is required in production. The development-only bypass is disabled when `NODE_ENV=production`.
 - Resend credentials enable administrator and applicant email notifications. An accepted inquiry is stored before email is attempted; delivery errors are recorded on the inquiry and in the audit log.
 
 ## Data and security notes
 
-- Portfolio files are limited to 10 MB, checked by extension, MIME type and file signature, and stored as private PostgreSQL `bytea` records.
 - Admin sessions are signed, HTTP-only, same-site cookies with an eight-hour lifetime.
 - CSV and Excel exports use server-side authorization, honor active filters and neutralize spreadsheet formulas.
 - Raw visitor IP addresses are never stored; keyed hashes are used for rate limiting.

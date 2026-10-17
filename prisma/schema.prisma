@@ -14,11 +14,6 @@ enum InquiryStatus {
   CLOSED
 }
 
-enum LearningMode {
-  ONLINE
-  IN_PERSON
-}
-
 model Inquiry {
   id                 String         @id @default(uuid()) @db.Uuid
   createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -26,39 +21,20 @@ model Inquiry {
   fullName           String         @map("full_name") @db.VarChar(100)
   email              String         @db.VarChar(254)
   phone              String         @db.VarChar(20)
-  discipline         String         @db.VarChar(100)
-  skillLevel         String         @map("skill_level") @db.VarChar(50)
-  certificationGoals String         @map("certification_goals") @db.VarChar(1000)
-  preferredSchedule  String         @map("preferred_schedule") @db.VarChar(200)
-  learningMode       LearningMode   @map("learning_mode")
-  remarks            String?        @db.VarChar(2000)
-  privacyConsentAt   DateTime       @map("privacy_consent_at") @db.Timestamptz(3)
+  organisation       String         @db.VarChar(150)
+  area               String         @db.VarChar(100)
+  message            String         @db.VarChar(2000)
   status             InquiryStatus  @default(NEW)
   ipHash             String         @map("ip_hash") @db.Char(64)
   duplicateKey       String         @unique(map: "inquiries_duplicate_key_key") @map("duplicate_key") @db.Char(64)
   emailDeliveryError String?        @map("email_delivery_error") @db.VarChar(500)
-  portfolio          Portfolio?
   auditLogs          AuditLog[]
 
   @@index([createdAt(sort: Desc)], map: "inquiries_created_at_idx")
   @@index([status, createdAt(sort: Desc)], map: "inquiries_status_created_at_idx")
-  @@index([discipline], map: "inquiries_discipline_idx")
+  @@index([area], map: "inquiries_area_idx")
   @@index([ipHash, createdAt], map: "inquiries_ip_hash_created_at_idx")
   @@map("inquiries")
-}
-
-model Portfolio {
-  id        String   @id @default(uuid()) @db.Uuid
-  inquiryId String   @unique(map: "portfolios_inquiry_id_key") @map("inquiry_id") @db.Uuid
-  fileName  String   @map("file_name") @db.VarChar(255)
-  mimeType  String   @map("mime_type") @db.VarChar(100)
-  byteSize  Int      @map("byte_size")
-  checksum  String   @db.Char(64)
-  content   Bytes
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-
-  @@map("portfolios")
 }
 
 model AuditLog {
