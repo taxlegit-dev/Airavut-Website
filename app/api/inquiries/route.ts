@@ -1,9 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { sendInquiryNotifications } from "@/lib/email";
-import { inquirySchema, validatePortfolio, verifyTurnstile } from "@/lib/inquiries";
+import { inquirySchema, verifyTurnstile } from "@/lib/inquiries";
 import { prisma } from "@/lib/prisma";
-import { checksum, hasValidOrigin, keyedHash, requestIp } from "@/lib/security";
+import { hasValidOrigin, keyedHash, requestIp } from "@/lib/security";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -22,25 +22,18 @@ export async function POST(request: Request) {
     if (recent >= 5) return NextResponse.json({ message: "Too many inquiries were submitted. Please try again later." }, { status: 429 });
     if (!(await verifyTurnstile(parsed.data.turnstileToken, ip))) return NextResponse.json({ message: "Anti-spam verification failed. Please try again." }, { status: 400 });
 
-    const portfolioValue = form.get("portfolio");
-    const portfolio = await validatePortfolio(portfolioValue instanceof File ? portfolioValue : null);
     const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
-    const duplicateKey = keyedHash(`${parsed.data.email}|${parsed.data.phone}|${parsed.data.discipline}|${hourBucket}`);
+    const duplicateKey = keyedHash(`${parsed.data.email}|${parsed.data.phone}|${parsed.data.area}|${hourBucket}`);
     const inquiry = await prisma.inquiry.create({
       data: {
         fullName: parsed.data.fullName,
         email: parsed.data.email,
         phone: parsed.data.phone,
-        discipline: parsed.data.discipline,
-        skillLevel: parsed.data.skillLevel,
-        certificationGoals: parsed.data.certificationGoals,
-        preferredSchedule: parsed.data.preferredSchedule,
-        learningMode: parsed.data.learningMode,
-        remarks: parsed.data.remarks || null,
-        privacyConsentAt: new Date(),
+        organisation: parsed.data.organisation,
+        area: parsed.data.area,
+        message: parsed.data.message,
         ipHash,
         duplicateKey,
-        portfolio: portfolio ? { create: { ...portfolio, checksum: checksum(portfolio.content) } } : undefined,
         auditLogs: { create: { actor: "public-form", action: "INQUIRY_CREATED" } }
       }
     });
@@ -57,7 +50,6 @@ export async function POST(request: Request) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return NextResponse.json({ message: "This inquiry was already received. Please wait before submitting it again." }, { status: 409 });
     }
-    if (error instanceof Error && error.message.includes("portfolio")) return NextResponse.json({ message: error.message }, { status: 400 });
     console.error("Inquiry submission failed", error);
     return NextResponse.json({ message: "We could not accept the inquiry right now. Please try again." }, { status: 500 });
   }

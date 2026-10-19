@@ -6,7 +6,7 @@ import { getAdminSession } from "@/lib/security";
 
 export const runtime = "nodejs";
 
-const headers = ["Submitted At", "Full Name", "Email", "Phone", "Discipline", "Skill Level", "Certification Goals", "Preferred Schedule", "Learning Mode", "Remarks", "Status", "Portfolio"];
+const headers = ["Submitted At", "Full Name", "Email", "Phone", "Organisation", "Area of Inquiry", "Message", "Status"];
 const safeCell = (value: unknown) => {
   const text = value == null ? "" : String(value);
   return /^[=+\-@]/.test(text) ? `'${text}` : text;
@@ -21,10 +21,9 @@ export async function GET(request: Request) {
   const records = await prisma.inquiry.findMany({
     where: inquiryWhere(filters),
     orderBy: inquiryOrder(filters.sort),
-    take: 10000,
-    include: { portfolio: { select: { id: true } } }
+    take: 10000
   });
-  const rows = records.map((item) => [item.createdAt.toISOString(), item.fullName, item.email, item.phone, item.discipline, item.skillLevel, item.certificationGoals, item.preferredSchedule, item.learningMode.replace("_", " "), item.remarks ?? "", item.status.replace("_", " "), item.portfolio ? "Yes" : "No"].map(safeCell));
+  const rows = records.map((item) => [item.createdAt.toISOString(), item.fullName, item.email, item.phone, item.organisation, item.area, item.message, item.status.replace("_", " ")].map(safeCell));
   await prisma.auditLog.create({ data: { actor: session.email, action: "INQUIRIES_EXPORTED", metadata: { format: filters.format ?? "csv", count: records.length } } });
 
   if (filters.format === "xlsx") {
@@ -36,7 +35,7 @@ export async function GET(request: Request) {
     sheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0D1530" } };
     sheet.columns = headers.map((header, index) => ({ header, key: String(index), width: Math.min(45, Math.max(14, header.length + 4)) }));
-    sheet.autoFilter = { from: "A1", to: "L1" };
+    sheet.autoFilter = { from: "A1", to: "H1" };
     const buffer = await workbook.xlsx.writeBuffer();
     return new NextResponse(Buffer.from(buffer), { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": "attachment; filename=airavut-inquiries.xlsx", "cache-control": "private, no-store" } });
   }

@@ -12,22 +12,14 @@ declare global {
   }
 }
 
-const steps = ["Contact", "Learning goals", "Preferences"] as const;
-const disciplines = [
-  "Vocals – Hindustani",
-  "Vocals – Western",
-  "Piano / Keyboard",
-  "Guitar",
-  "Violin",
-  "Drums",
-  "Tabla",
-  "Bansuri (Flute)",
-  "Dance – Bharatanatyam",
-  "Dance – Kathak",
-  "Dance – Western",
-  "Theatre – Acting",
-  "Other"
-];
+const steps = ["Contact", "Your inquiry"] as const;
+const inquiryAreas = [
+  "Schools & Universities",
+  "Examination & Certification Bodies",
+  "Strategic & Institutional Partners",
+  "Investors & Financial Institutions",
+  "Media"
+] as const;
 
 type FieldErrors = Record<string, string>;
 
@@ -42,16 +34,14 @@ function firstInvalidField(step: number, form: HTMLFormElement): FieldErrors {
     if (!/^[+()\-\s\d]{7,20}$/.test(value("phone"))) errors.phone = "Enter a valid phone or WhatsApp number.";
   }
   if (step === 1) {
-    if (!value("discipline")) errors.discipline = "Choose a performing arts discipline.";
-    if (!value("skillLevel")) errors.skillLevel = "Choose your current skill level.";
-    if (value("certificationGoals").length < 3) errors.certificationGoals = "Tell us your certification goal.";
-  }
-  if (step === 2) {
-    if (!value("preferredSchedule")) errors.preferredSchedule = "Enter your preferred schedule.";
-    if (!value("learningMode")) errors.learningMode = "Choose a learning mode.";
-    if (!data.get("privacyConsent")) errors.privacyConsent = "Please confirm that we may process this inquiry.";
-    const file = data.get("portfolio");
-    if (file instanceof File && file.size > 10 * 1024 * 1024) errors.portfolio = "The file must be 10 MB or smaller.";
+    if (value("organisation").length < 2) errors.organisation = "Enter your organisation name.";
+    if (!inquiryAreas.includes(value("area") as (typeof inquiryAreas)[number])) errors.area = "Choose an area for your inquiry.";
+    const messageText = value("message");
+    if (messageText.length === 0) {
+      errors.message = "Please enter your message.";
+    } else if (messageText.length < 10) {
+      errors.message = "Your message is a little too short. Please add a few more details so we can better assist you.";
+    }
   }
   return errors;
 }
@@ -59,6 +49,7 @@ function firstInvalidField(step: number, form: HTMLFormElement): FieldErrors {
 export function InquiryForm() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
+  const [selectedArea, setSelectedArea] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -81,8 +72,21 @@ export function InquiryForm() {
   }, [siteKey]);
 
   useEffect(() => {
-    if (step === 2) renderTurnstile();
+    if (step === 1) renderTurnstile();
   }, [step, renderTurnstile]);
+
+  useEffect(() => {
+    const links = Array.from(document.querySelectorAll<HTMLElement>("[data-area]"));
+    const selectArea = (event: Event) => {
+      const index = Number.parseInt((event.currentTarget as HTMLElement).dataset.area ?? "", 10);
+      const area = inquiryAreas[index];
+      if (!area) return;
+      setSelectedArea(area);
+      setErrors((current) => ({ ...current, area: "" }));
+    };
+    links.forEach((link) => link.addEventListener("click", selectArea));
+    return () => links.forEach((link) => link.removeEventListener("click", selectArea));
+  }, []);
 
   const move = (direction: 1 | -1) => {
     if (!formRef.current) return;
@@ -102,9 +106,23 @@ export function InquiryForm() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors = firstInvalidField(2, event.currentTarget);
+    const form = formRef.current;
+    if (!form) return;
+    const step0Errors = firstInvalidField(0, form);
+    const step1Errors = firstInvalidField(1, form);
+    const nextErrors = { ...step0Errors, ...step1Errors };
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length) return;
+    if (Object.keys(step0Errors).length) {
+      setStep(0);
+      const first = Object.keys(step0Errors)[0];
+      if (first) (form.elements.namedItem(first) as HTMLElement | null)?.focus();
+      return;
+    }
+    if (Object.keys(step1Errors).length) {
+      const first = Object.keys(step1Errors)[0];
+      if (first) (form.elements.namedItem(first) as HTMLElement | null)?.focus();
+      return;
+    }
     if (siteKey && !turnstileToken) {
       setErrors({ turnstile: "Complete the anti-spam check." });
       return;
@@ -112,7 +130,7 @@ export function InquiryForm() {
 
     setStatus("submitting");
     setMessage("");
-    const data = new FormData(event.currentTarget);
+    const data = new FormData(form);
     data.set("turnstileToken", turnstileToken || "development-bypass");
 
     try {
@@ -121,7 +139,8 @@ export function InquiryForm() {
       if (!response.ok) throw new Error(result.message || "We could not submit your inquiry.");
       setStatus("success");
       setMessage(result.message || "Your inquiry has been received.");
-      event.currentTarget.reset();
+      form.reset();
+      setSelectedArea("");
       setStep(0);
     } catch (error) {
       setStatus("error");
@@ -138,7 +157,7 @@ export function InquiryForm() {
         <p className="eyebrow">Inquiry received</p>
         <h3>Thank you for reaching out.</h3>
         <p>{message}</p>
-        <button type="button" className="btn" onClick={() => { setStatus("idle"); setMessage(""); }}>
+        <button type="button" className="btn" onClick={() => { setStatus("idle"); setMessage(""); setSelectedArea(""); }}>
           Send another inquiry
         </button>
       </div>
@@ -149,8 +168,8 @@ export function InquiryForm() {
     <form className="card enq inquiry-form" data-direction={direction} id="talk-to-us-form" ref={formRef} onSubmit={submit} noValidate aria-busy={status === "submitting"}>
       <div className="inquiry-heading">
         <div>
-          <p className="eyebrow">Applicant inquiry</p>
-          <h3>Tell us how you want to learn.</h3>
+          <p className="eyebrow">Start a conversation</p>
+          <h3>Tell us how we can help.</h3>
         </div>
         <span aria-live="polite">Step {step + 1} of {steps.length}</span>
       </div>
@@ -174,20 +193,11 @@ export function InquiryForm() {
         </fieldset>
 
         <fieldset className={step === 1 ? "form-step active" : "form-step"} aria-hidden={step !== 1}>
-          <legend>Learning goals</legend>
-          <label>Performing arts discipline<select name="discipline" defaultValue="" aria-invalid={Boolean(errors.discipline)} required><option value="" disabled>Select a discipline</option>{disciplines.map((item) => <option key={item}>{item}</option>)}</select><FieldError text={errors.discipline} /></label>
-          <label>Current skill level<select name="skillLevel" defaultValue="" aria-invalid={Boolean(errors.skillLevel)} required><option value="" disabled>Select your level</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option><option>Professional</option></select><FieldError text={errors.skillLevel} /></label>
-          <label>Certification goals<textarea name="certificationGoals" maxLength={1000} placeholder="Tell us what you hope to achieve" aria-invalid={Boolean(errors.certificationGoals)} required /><FieldError text={errors.certificationGoals} /></label>
-        </fieldset>
-
-        <fieldset className={step === 2 ? "form-step active" : "form-step"} aria-hidden={step !== 2}>
-          <legend>Preferences and portfolio</legend>
-          <label>Preferred schedule<input name="preferredSchedule" maxLength={200} placeholder="For example: weekday evenings" aria-invalid={Boolean(errors.preferredSchedule)} required /><FieldError text={errors.preferredSchedule} /></label>
-          <fieldset className="mode-field"><legend>Mode of learning</legend><div className="choice-row"><label><input name="learningMode" type="radio" value="ONLINE" /> Online</label><label><input name="learningMode" type="radio" value="IN_PERSON" /> In-person</label></div><FieldError text={errors.learningMode} /></fieldset>
-          <label>Audition or portfolio <span className="optional">Optional · PDF, JPG, PNG, MP3 or MP4 · max 10 MB</span><input name="portfolio" type="file" accept=".pdf,.jpg,.jpeg,.png,.mp3,.mp4,application/pdf,image/jpeg,image/png,audio/mpeg,video/mp4" aria-invalid={Boolean(errors.portfolio)} /><FieldError text={errors.portfolio} /></label>
-          <label>Remarks <span className="optional">Optional</span><textarea name="remarks" maxLength={2000} placeholder="Anything else we should know?" /></label>
-          <label className="consent"><input name="privacyConsent" type="checkbox" value="true" /> <span>I consent to Airavut processing these details to respond to my inquiry.</span></label><FieldError text={errors.privacyConsent} />
-          {siteKey ? <div ref={turnstileRef} className="turnstile-box" /> : <p className="dev-note">Anti-spam verification activates when the Turnstile site key is configured.</p>}
+          <legend>Your inquiry</legend>
+          <label>Organisation<input name="organisation" autoComplete="organization" maxLength={150} aria-invalid={Boolean(errors.organisation)} required /><FieldError text={errors.organisation} /></label>
+          <label>Area of inquiry<select name="area" value={selectedArea} onChange={(e) => { setSelectedArea(e.target.value); setErrors((current) => ({ ...current, area: "" })); }} aria-invalid={Boolean(errors.area)} required><option value="" disabled>Select an area</option>{inquiryAreas.map((area) => <option key={area} value={area}>{area}</option>)}</select><FieldError text={errors.area} /></label>
+          <label>Message<textarea name="message" maxLength={2000} placeholder="Tell us how you would like to work with Airavut (minimum 10 characters)" aria-invalid={Boolean(errors.message)} onChange={(e) => { const val = e.target.value.trim(); if (errors.message) { if (val.length >= 10) { setErrors((cur) => ({ ...cur, message: "" })); } else if (val.length === 0) { setErrors((cur) => ({ ...cur, message: "Please enter your message." })); } else { setErrors((cur) => ({ ...cur, message: "Your message is a little too short. Please add a few more details so we can better assist you." })); } } }} onBlur={(e) => { const val = e.target.value.trim(); if (val.length > 0 && val.length < 10) { setErrors((cur) => ({ ...cur, message: "Your message is a little too short. Please add a few more details so we can better assist you." })); } }} required /><FieldError text={errors.message} /></label>
+          {siteKey ? <div ref={turnstileRef} className="turnstile-box" /> : process.env.NODE_ENV !== "production" ? <p className="dev-note">Anti-spam verification activates when the Turnstile site key is configured.</p> : null}
           <FieldError text={errors.turnstile} />
         </fieldset>
       </div>

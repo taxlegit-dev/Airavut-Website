@@ -32,7 +32,7 @@ function layeredArt(tag: string, kind: string, priority: boolean) {
   const ripples = `<span class="art-ripples" style="--x:${art.core.x}%;--y:${art.core.y}%;--s:${(art.core.r * 14).toFixed(2)}%"><i></i><i></i><i></i></span>`;
 
   return (
-    `<div class="art ${kind === "slide-art" ? "art-slide" : "art-page"}" data-art="${name}" aria-hidden="true"><div class="art-stage" style="--cx:${art.core.x}%;--cy:${art.core.y}%">` +
+    `<div class="art ${kind === "slide-art" ? "art-slide" : "art-page"}" data-art="${name}" aria-hidden="true" style="--fx:${art.core.x}%;--fy:${art.core.y}%"><div class="art-stage" style="--cx:${art.core.x}%;--cy:${art.core.y}%">` +
     `<div class="art-plane" data-depth="0.35">${image(art.base, "art-base", "")}</div>` +
     `<div class="art-plane" data-depth="1">${image(art.dust, "art-dust", "")}</div>` +
     `<div class="art-plane art-orbit" data-depth="0.6">${core}${ripples}${dial}${rings}</div>` +
