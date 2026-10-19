@@ -83,7 +83,7 @@ export async function ensureDefaultAdmin() {
       await prisma.adminUser.create({
         data: {
           email,
-          passwordHash: hash || makePasswordHash("Admin@Airavut2026"),
+          passwordHash: hash || makePasswordHash("admin@123456"),
           name: "Administrator"
         }
       });

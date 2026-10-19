@@ -12,7 +12,15 @@ export default async function AdminLogin({ searchParams }: { searchParams: Promi
         <p className="admin-kicker">Airavut administration</p>
         <h1>Sign in to inquiries</h1>
         <p>Authorized administrators only.</p>
-        {error ? <p className="admin-error" role="alert">{error === "limited" ? "Too many sign-in attempts. Try again in 15 minutes." : "The email or password is incorrect."}</p> : null}
+        {error ? (
+          <p className="admin-error" role="alert">
+            {error === "limited"
+              ? "Too many sign-in attempts. Try again in 15 minutes."
+              : error === "database"
+              ? "Database connection error. Please verify DATABASE_URL in Vercel project settings."
+              : "The email or password is incorrect."}
+          </p>
+        ) : null}
         <form method="post" action="/api/admin/login">
           <label>Email<input name="email" type="email" autoComplete="username" required /></label>
           <label>Password<input name="password" type="password" autoComplete="current-password" required /></label>
