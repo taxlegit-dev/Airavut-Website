@@ -49,14 +49,13 @@ p{margin:0}
 .menu-btn[aria-expanded="true"] span:last-child{transform:translateY(-3.75px) rotate(-45deg)}
 
 /* hero */
-.hero{position:relative;min-height:max(640px,100svh);overflow:hidden;background:var(--navy)}
+.hero{position:relative;overflow:hidden;background:var(--navy)}
 .slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .9s ease,visibility 0s linear .9s}
 .slide.is-active{opacity:1;visibility:visible;transition:opacity .9s ease,visibility 0s}
 .slide-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:right center;transform:scale(1.07);transform-origin:75% 50%}
 .slide.is-active .slide-art{transform:scale(1);transition:transform 8s cubic-bezier(.2,.6,.2,1)}
 .slide::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(10,16,34,.92) 0%,rgba(10,16,34,.72) 38%,rgba(10,16,34,0) 62%)}
-.slide-copy{z-index:2;height:100%;display:flex;flex-direction:column;justify-content:center;gap:32px;padding-top:88px;padding-bottom:96px}
-.slide-copy .lede{font-family:var(--ff-body);font-size:clamp(17px,1.15vw,22px);line-height:1.6;color:var(--muted);max-width:34em}
+.slide-copy{z-index:2;height:100%;display:flex;flex-direction:column;justify-content:center}
 .actions{display:flex;flex-wrap:wrap;align-items:center;gap:20px 36px}
 .hero-ctrl{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));z-index:3;display:flex;justify-content:space-between;align-items:center}
 .indicators{display:flex;align-items:center;gap:6px}
@@ -151,10 +150,6 @@ p{margin:0}
  .fbrand{grid-column:1/-1}
 }
 @media (max-width:900px){
- .slide-art{object-position:72% center;opacity:.55}
- .slide::before{background:linear-gradient(180deg,rgba(10,16,34,.35) 0%,rgba(10,16,34,.85) 70%,rgba(10,16,34,.95) 100%)}
- .slide-copy{justify-content:flex-end;padding-bottom:120px;gap:24px}
- .hashtag{display:none}
  .sec-art{opacity:.4}
  .about::before,.model::before,.partner::before{background:rgba(10,16,34,.7)}
  .about,.model,.partner{min-height:0}
@@ -176,13 +171,11 @@ p{margin:0}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.slide,.slide.is-active,.slide-art,.slide.is-active .slide-art{transition:none!important;transform:none!important}.textlink::after{transition:none}}
 .page[hidden]{display:none!important}
 /* inner heroes */
-.ihero{position:relative;overflow:hidden;min-height:max(620px,88svh);display:flex;align-items:center;background:var(--navy)}
+.ihero{position:relative;overflow:hidden;display:flex;background:var(--navy)}
 .ihero .hero-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:right center}
 .ihero::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(10,16,34,.94) 0%,rgba(10,16,34,.75) 38%,rgba(10,16,34,0) 64%)}
-.ihero>.wrap{z-index:2;padding-top:110px;padding-bottom:72px}
-.hero-inner{display:flex;flex-direction:column;gap:26px;max-width:760px}
-.ihero .display{font-size:clamp(38px,4vw,74px);max-width:15ch}
-.hero-inner .lede{font-family:var(--ff-body);font-size:clamp(17px,1.15vw,21px);line-height:1.6;color:var(--muted);max-width:34em}
+.ihero>.wrap{z-index:2;display:flex;align-items:center}
+.hero-inner{display:flex;flex-direction:column}
 .crumb{font-family:var(--ff-display);font-size:14px;color:var(--faint)}
 .crumb a{color:var(--faint);text-decoration:none}.crumb a:hover{color:#fff}
 .crumb .sep{color:var(--blue);margin:0 10px}.crumb .here{color:var(--gold-l)}
@@ -311,9 +304,6 @@ p{margin:0}
 .inline-links{display:flex;gap:18px}
 @media (max-width:1180px){.grid4{grid-template-columns:1fr 1fr}.statements{grid-template-columns:1fr 1fr}.rolecols.c4{grid-template-columns:1fr 1fr}}
 @media (max-width:900px){
- .ihero::before{background:linear-gradient(180deg,rgba(10,16,34,.35) 0%,rgba(10,16,34,.85) 65%,rgba(10,16,34,.96) 100%)}
- .ihero .hero-art{opacity:.55;object-position:72% center}
- .ihero{align-items:flex-end}
  .grid4,.trio,.stats3,.pair,.addr,.reach,.statements,.rolecols.c3,.split,.founder{grid-template-columns:1fr}
  .pcards{grid-template-columns:1fr}.pcards .card,.pcards .card:nth-child(4),.pcards .card:nth-child(5){grid-column:auto}
  .journey{grid-template-columns:repeat(4,1fr);row-gap:28px}.journey::before{display:none}
@@ -331,9 +321,6 @@ p{margin:0}
 
 /* Shared page rhythm: keep navigation-linked heroes and inner-page content
    geometrically consistent while leaving the Home page card composition intact. */
-.hero,.ihero{min-height:max(640px,100svh)}
-.ihero>.wrap{display:flex;align-items:flex-start;min-height:max(640px,100svh);padding-top:clamp(132px,18vh,180px);padding-bottom:72px}
-.hero-inner{width:min(760px,100%)}
 .display,.h2,.card h3,.statement,.motto,.closing,.bigwords{text-wrap:balance}
 .lede,.head>p,.col>p,.card>p,.ftext>p{text-wrap:pretty}
 .page p,.page li,.page a{overflow-wrap:anywhere}
@@ -352,10 +339,64 @@ p{margin:0}
  .page:not([data-page="home"]) .pcards{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:900px){
- .ihero>.wrap{min-height:max(640px,100svh);padding-top:120px;padding-bottom:64px;align-items:flex-end}
  .page:not([data-page="home"]) :is(.grid2,.grid3,.grid4,.pcards,.trio,.pair,.addr){grid-auto-rows:auto}
  .page:not([data-page="home"]) .pcards{grid-template-columns:1fr}
  .page:not([data-page="home"]) .grid3>.card>h3,
  .page:not([data-page="home"]) .pcards h3,
  .page:not([data-page="home"]) .ways .ch{min-height:0}
 }
+
+/* Hero frame — shared by the Home carousel and every inner page.
+   One screen tall, copy centred in the space below the fixed header, type sized by
+   viewport width AND height so the longest headline still fits a short laptop screen
+   and switching pages never shifts the composition. Wide screens put copy and artwork
+   side by side; portrait tablets and phones stack the artwork above the copy. */
+.hero,.ihero{
+ --hero-top:calc(88px + env(safe-area-inset-top,0px) + clamp(8px,3svh,40px));
+ --hero-bottom:clamp(24px,6svh,72px);
+ --hero-gap:clamp(12px,2.6svh,26px);
+ min-height:100vh;min-height:100svh
+}
+.hero{--hero-bottom:calc(clamp(24px,6svh,72px) + 48px)}
+.ihero>.wrap{min-height:inherit;padding-block:var(--hero-top) var(--hero-bottom)}
+.hero.swiper .slide-copy{padding-block:var(--hero-top) var(--hero-bottom)}
+.hero-inner{width:min(720px,54%);gap:var(--hero-gap)}
+.slide-copy{gap:var(--hero-gap)}
+.slide-copy>*{max-width:min(720px,54%)}
+:is(.hero,.ihero) .display{font-size:clamp(30px,min(4.2vw,7.4svh),76px);max-width:19ch}
+:is(.hero-inner,.slide-copy) .lede{font-family:var(--ff-body);font-size:clamp(16px,min(1.15vw,2.5svh),21px);line-height:1.6;color:var(--muted);max-width:34em}
+:is(.hero,.ihero) .btn{min-height:clamp(48px,7svh,56px)}
+:is(.hero,.ihero) .actions .ulink{min-height:44px;display:inline-flex;align-items:center}
+
+/* Short landscape screens (phones on their side): tighter copy, drop the repeated tagline. */
+@media (max-height:540px) and (min-aspect-ratio:1/1){
+ .hero-inner,.slide-copy>*{width:auto;max-width:min(640px,62%)}
+ :is(.hero,.ihero) .display{font-size:clamp(24px,min(3.6vw,7svh),40px);max-width:22ch}
+ :is(.hero,.ihero) .dots{display:none}
+ .hero,.ihero{--hero-top:calc(88px + env(safe-area-inset-top,0px));--hero-gap:10px}
+}
+
+/* Stacked: artwork band on top, copy below. A grid row (not flex-grow) sizes the band,
+   so the artwork's container-query units see its real height. */
+@media (max-width:1023px) and (min-height:541px),(max-width:1366px) and (max-aspect-ratio:1/1){
+ .ihero,.hero.swiper .swiper-slide.slide{display:grid;grid-template:minmax(var(--band-min),1fr) auto/100%;padding-top:calc(88px + env(safe-area-inset-top,0px))}
+ .hero,.ihero{--band-min:clamp(130px,26svh,460px)}
+ .ihero::before,.hero .slide::before{display:none}
+ :is(.ihero,.hero .slide)>.art{--ax:var(--fx,72%);position:relative;inset:auto;
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 14%,#000 70%,transparent);mask-image:linear-gradient(180deg,transparent,#000 14%,#000 70%,transparent)}
+ /* Zoom in on the artwork's focal point instead of showing the whole wide composition. */
+ :is(.ihero,.hero .slide)>.art .art-stage{left:50%;top:50%;width:max(150cqw,177.78cqh);height:max(84.375cqw,100cqh);translate:clamp(calc(50cqw - 100%),calc(var(--fx,72%) * -1),-50cqw) clamp(calc(50cqh - 100%),calc(var(--fy,50%) * -1),-50cqh)}
+ :is(.ihero,.hero .slide)>:is(.hero-art,.slide-art){position:relative;inset:auto;height:100%;object-position:var(--fx,70%) center}
+ .ihero>.wrap,.hero.swiper .slide>.slide-copy{min-height:0;justify-content:flex-start;padding-top:clamp(4px,1.5svh,20px)}
+ .ihero>.wrap{padding-bottom:clamp(28px,5svh,64px)}
+ .hero.swiper .slide>.slide-copy{padding-bottom:calc(clamp(16px,3svh,40px) + 64px)}
+ .hero-inner,.slide-copy>*{width:auto;max-width:min(680px,100%)}
+ :is(.hero,.ihero) .display{font-size:clamp(27px,min(7.2vw,5.4svh),56px);max-width:20ch}
+ :is(.hero,.ihero) .actions{gap:12px 28px}
+ .hashtag{display:none}
+}
+/* Small phones: drop the repeated tagline so the CTAs stay on the first screen. */
+@media (max-width:1023px) and (min-height:541px) and (max-height:760px){
+ :is(.hero,.ihero) .dots{display:none}
+}
+@media (max-width:420px){:is(.hero,.ihero) .btn{padding:0 26px}:is(.hero,.ihero) .actions{gap:10px 20px}:is(.hero,.ihero) .actions .ulink{font-size:16px}}

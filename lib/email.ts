@@ -22,10 +22,8 @@ export async function sendInquiryNotifications(inquiry: Inquiry) {
   if (!admin) throw new Error("INQUIRY_NOTIFICATION_EMAIL or ADMIN_EMAIL is required.");
   const rows = [
     ["Name", inquiry.fullName], ["Email", inquiry.email], ["Phone", inquiry.phone],
-    ["Discipline", inquiry.discipline], ["Skill level", inquiry.skillLevel],
-    ["Certification goals", inquiry.certificationGoals], ["Schedule", inquiry.preferredSchedule],
-    ["Mode", inquiry.learningMode.replace("_", " ")], ["Remarks", inquiry.remarks || "—"]
+    ["Organisation", inquiry.organisation], ["Area of inquiry", inquiry.area], ["Message", inquiry.message]
   ].map(([label, value]) => `<tr><th align="left" style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(label)}</th><td style="padding:8px;border-bottom:1px solid #ddd">${escapeHtml(value)}</td></tr>`).join("");
-  await send(admin, `New Airavut inquiry — ${inquiry.fullName}`, `<h1>New applicant inquiry</h1><table>${rows}</table>`);
+  await send(admin, `New Airavut inquiry — ${inquiry.fullName}`, `<h1>New inquiry</h1><table>${rows}</table>`);
   await send(inquiry.email, "We received your Airavut inquiry", `<p>Dear ${escapeHtml(inquiry.fullName)},</p><p>Thank you for contacting Airavut Education Ventures. Your inquiry has been received and our team will review it.</p><p>Airavut Education Ventures</p>`);
 }

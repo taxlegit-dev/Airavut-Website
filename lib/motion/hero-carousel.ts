@@ -1,6 +1,6 @@
 import gsap from "gsap";
 import Swiper from "swiper";
-import { A11y, EffectFade, Keyboard, Navigation } from "swiper/modules";
+import { A11y, EffectFade, Keyboard } from "swiper/modules";
 import { mountPointerParallax, pauseWhenHidden } from "@/lib/motion/hero-intros";
 import { splitLines } from "@/lib/motion/text";
 
@@ -80,25 +80,17 @@ export function mountHeroCarousel(hero: HTMLElement, reduceMotion: boolean): Cle
   }
 
   const swiper = new Swiper(hero, {
-    modules: [A11y, EffectFade, Keyboard, Navigation],
-    a11y: {
-      enabled: true,
-      prevSlideMessage: "Previous highlight",
-      nextSlideMessage: "Next highlight",
-      firstSlideMessage: "This is the first highlight",
-      lastSlideMessage: "This is the last highlight"
-    },
+    modules: [A11y, EffectFade, Keyboard],
+    a11y: { enabled: true },
     allowTouchMove: true,
     effect: "fade",
     fadeEffect: { crossFade: true },
     grabCursor: !reduceMotion,
-    keyboard: { enabled: true, onlyInViewport: true },
+    // No prev/next buttons: left/right arrow keys, swipe and the indicators navigate.
+    // PageUp/PageDown stay with the page so they still scroll it.
+    keyboard: { enabled: true, onlyInViewport: true, pageUpDown: false },
     loop: true,
     loopPreventsSliding: false,
-    navigation: {
-      prevEl: hero.querySelector<HTMLElement>(".hero-prev"),
-      nextEl: hero.querySelector<HTMLElement>(".hero-next")
-    },
     simulateTouch: true,
     speed: reduceMotion ? 0 : 1100,
     threshold: 8,
