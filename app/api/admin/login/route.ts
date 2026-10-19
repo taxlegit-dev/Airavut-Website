@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createAdminSession, hasValidOrigin, keyedHash, requestIp, verifyPassword } from "@/lib/security";
+import { createAdminSession, ensureDefaultAdmin, hasValidOrigin, keyedHash, requestIp, verifyPassword } from "@/lib/security";
 
 export async function POST(request: Request) {
   if (!(await hasValidOrigin(request))) return NextResponse.json({ message: "Invalid request origin." }, { status: 403 });
@@ -9,15 +9,21 @@ export async function POST(request: Request) {
   const failedAttempts = await prisma.loginAttempt.count({ where: { ipHash, succeeded: false, createdAt: { gte: windowStart } } });
   if (failedAttempts >= 8) return NextResponse.redirect(new URL("/admin/login?error=limited", request.url), 303);
 
+  await ensureDefaultAdmin();
+
   const form = await request.formData();
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const password = String(form.get("password") ?? "");
-  const valid = email === process.env.ADMIN_EMAIL?.toLowerCase() && verifyPassword(password);
+
+  const user = email ? await prisma.adminUser.findUnique({ where: { email } }) : null;
+  const valid = Boolean(user && verifyPassword(password, user.passwordHash));
+
   if (!valid) {
     await prisma.loginAttempt.create({ data: { ipHash, succeeded: false } });
     return NextResponse.redirect(new URL("/admin/login?error=invalid", request.url), 303);
   }
+
   await prisma.loginAttempt.create({ data: { ipHash, succeeded: true } });
-  await createAdminSession(email);
+  await createAdminSession(user!.email);
   return NextResponse.redirect(new URL("/admin", request.url), 303);
 }

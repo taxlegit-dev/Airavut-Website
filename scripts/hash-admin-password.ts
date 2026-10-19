@@ -7,4 +7,4 @@ if (!password || password.length < 12) {
 }
 const salt = randomBytes(16);
 const key = scryptSync(password, salt, 64);
-console.log(`scrypt$${salt.toString("base64url")}$${key.toString("base64url")}`);
+console.log(`scrypt\\$${salt.toString("base64url")}\\$${key.toString("base64url")}`);

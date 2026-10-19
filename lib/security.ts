@@ -3,6 +3,8 @@ import "server-only";
 import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies, headers } from "next/headers";
 
+import { prisma } from "@/lib/prisma";
+
 const COOKIE_NAME = "airavut_admin";
 const SESSION_SECONDS = 60 * 60 * 8;
 
@@ -45,24 +47,50 @@ export async function getAdminSession(): Promise<SessionPayload | null> {
   if (expected.length !== supplied.length || !timingSafeEqual(expected, supplied)) return null;
   try {
     const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as SessionPayload;
-    return parsed.expires > Date.now() && parsed.email === process.env.ADMIN_EMAIL ? parsed : null;
+    return parsed.expires > Date.now() && typeof parsed.email === "string" && parsed.email.length > 0 ? parsed : null;
   } catch {
     return null;
   }
 }
 
-export function verifyPassword(password: string, encoded = process.env.ADMIN_PASSWORD_HASH ?? "") {
-  const [algorithm, saltValue, keyValue] = encoded.split("$");
+export function verifyPassword(password: string, encoded = "") {
+  if (!encoded) return false;
+  const delimiter = encoded.includes("$") ? "$" : ":";
+  const [algorithm, saltValue, keyValue] = encoded.split(delimiter);
   if (algorithm !== "scrypt" || !saltValue || !keyValue) return false;
-  const expected = Buffer.from(keyValue, "base64url");
-  const actual = scryptSync(password, Buffer.from(saltValue, "base64url"), expected.length);
-  return expected.length === actual.length && timingSafeEqual(expected, actual);
+  try {
+    const expected = Buffer.from(keyValue, "base64url");
+    const actual = scryptSync(password, Buffer.from(saltValue, "base64url"), expected.length);
+    return expected.length === actual.length && timingSafeEqual(expected, actual);
+  } catch {
+    return false;
+  }
 }
 
 export function makePasswordHash(password: string) {
   const salt = randomBytes(16);
   const key = scryptSync(password, salt, 64);
   return `scrypt$${salt.toString("base64url")}$${key.toString("base64url")}`;
+}
+
+export async function ensureDefaultAdmin() {
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const hash = process.env.ADMIN_PASSWORD_HASH?.trim();
+  if (!email) return;
+  try {
+    const existing = await prisma.adminUser.findUnique({ where: { email } });
+    if (!existing) {
+      await prisma.adminUser.create({
+        data: {
+          email,
+          passwordHash: hash || makePasswordHash("Admin@Airavut2026"),
+          name: "Administrator"
+        }
+      });
+    }
+  } catch {
+    // ignore if table not yet initialized or already created
+  }
 }
 
 export async function requestIp() {
