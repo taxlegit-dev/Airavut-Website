@@ -362,6 +362,7 @@ html.is-navigating { cursor: progress; }
   pointer-events: none;
   transform-origin: left center;
   transform: scaleX(0);
+  z-index: 1;
 }
 .journey::after { left: 6%; right: 6%; top: 29px; height: 2px; background: linear-gradient(90deg, var(--gold-l), var(--violet)); box-shadow: 0 0 12px rgba(242,217,138,.5); }
 .lppc::after { left: 12.5%; right: 12.5%; top: 59px; height: 4px; border-radius: 4px; background: linear-gradient(90deg, #FFEBB5, var(--gold-l), var(--violet), var(--blue)); box-shadow: 0 0 16px rgba(242,217,138,.45); }
@@ -371,7 +372,8 @@ html.is-navigating { cursor: progress; }
   @keyframes line-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 }
 .jnode, .lnode { transition: box-shadow .6s var(--ease-premium), background-color .6s, scale .5s var(--ease-out); }
-.journey li:hover .jnode, .lppc li:hover .lnode { scale: 1.08; box-shadow: 0 0 0 10px rgba(155,107,255,.18), 0 0 30px rgba(242,217,138,.35); }
+.journey li:hover, .lppc li:hover { z-index: 3; }
+.journey li:hover .jnode, .lppc li:hover .lnode { scale: 1.08; box-shadow: 0 0 0 10px rgba(155,107,255,.18), 0 0 30px rgba(242,217,138,.35); z-index: 3; }
 
 /* Ticker */
 .motion-marquee { width: max-content; max-width: none; flex-wrap: nowrap!important; animation: content-marquee 26s linear infinite; }

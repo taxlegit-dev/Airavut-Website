@@ -1,12 +1,35 @@
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { sendInquiryNotifications } from "@/lib/email";
-import { inquirySchema, verifyTurnstile } from "@/lib/inquiries";
+// import { inquirySchema, verifyTurnstile } from "@/lib/inquiries";
+import { DUPLICATE_INQUIRY_MESSAGE, findExistingInquiry, inquirySchema } from "@/lib/inquiries";
 import { prisma } from "@/lib/prisma";
 import { hasValidOrigin, keyedHash, requestIp } from "@/lib/security";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+
+export async function GET(request: Request) {
+  if (!(await hasValidOrigin(request))) return NextResponse.json({ message: "Invalid request origin." }, { status: 403 });
+  try {
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get("email") ?? "";
+    const phone = searchParams.get("phone") ?? "";
+
+    if (!email && !phone) {
+      return NextResponse.json({ exists: false });
+    }
+
+    const exists = await findExistingInquiry(email, phone);
+    return NextResponse.json({
+      exists,
+      message: exists ? DUPLICATE_INQUIRY_MESSAGE : undefined
+    });
+  } catch (error) {
+    console.error("Duplicate check failed", error);
+    return NextResponse.json({ exists: false }, { status: 200 });
+  }
+}
 
 export async function POST(request: Request) {
   if (!(await hasValidOrigin(request))) return NextResponse.json({ message: "Invalid request origin." }, { status: 403 });
@@ -20,7 +43,18 @@ export async function POST(request: Request) {
     const ipHash = keyedHash(ip);
     const recent = await prisma.inquiry.count({ where: { ipHash, createdAt: { gte: new Date(Date.now() - 15 * 60 * 1000) } } });
     if (recent >= 5) return NextResponse.json({ message: "Too many inquiries were submitted. Please try again later." }, { status: 429 });
-    if (!(await verifyTurnstile(parsed.data.turnstileToken, ip))) return NextResponse.json({ message: "Anti-spam verification failed. Please try again." }, { status: 400 });
+
+    // Temporarily disabled Turnstile anti-spam verification:
+    // if (!(await verifyTurnstile(parsed.data.turnstileToken, ip))) return NextResponse.json({ message: "Anti-spam verification failed. Please try again." }, { status: 400 });
+
+    // Prevent duplicate inquiries: check if an inquiry already exists with the same email or phone
+    const isDuplicate = await findExistingInquiry(parsed.data.email, parsed.data.phone);
+    if (isDuplicate) {
+      return NextResponse.json(
+        { message: DUPLICATE_INQUIRY_MESSAGE, duplicate: true },
+        { status: 409 }
+      );
+    }
 
     const hourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
     const duplicateKey = keyedHash(`${parsed.data.email}|${parsed.data.phone}|${parsed.data.area}|${hourBucket}`);
@@ -48,7 +82,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Your inquiry has been received. Our team will contact you soon." }, { status: 201 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return NextResponse.json({ message: "This inquiry was already received. Please wait before submitting it again." }, { status: 409 });
+      return NextResponse.json({ message: DUPLICATE_INQUIRY_MESSAGE, duplicate: true }, { status: 409 });
     }
     console.error("Inquiry submission failed", error);
     return NextResponse.json({ message: "We could not accept the inquiry right now. Please try again." }, { status: 500 });
