@@ -7,7 +7,7 @@ A production-ready Next.js application for Airavut Education Ventures. It preser
 1. Copy `.env.example` to `.env.local` and provide the required values.
 2. Install dependencies with `npm install`.
 3. Generate the Prisma client with `npm run prisma:generate`.
-4. Apply `prisma/migrations/20261015000000_initial/migration.sql` through your normal database migration process. This repository does not run or apply migrations automatically.
+4. Apply the SQL files in `prisma/migrations/` in order (initial schema, admin users, career applications) through your normal database migration process, e.g. `npx prisma migrate deploy`. This repository does not run or apply migrations automatically.
 5. Generate an admin password hash with `npm run admin:hash -- "a-long-private-password"` and place the output in `ADMIN_PASSWORD_HASH`.
 6. Start the project with `npm run dev`.
 

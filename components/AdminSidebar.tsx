@@ -8,6 +8,7 @@ export function AdminSidebar({ sessionEmail }: { sessionEmail: string }) {
 
   const isInquiries = pathname === "/admin" || pathname.startsWith("/admin/inquiries");
   const isUsers = pathname.startsWith("/admin/users");
+  const isApplications = pathname.startsWith("/admin/applications");
 
   return (
     <aside className="admin-sidebar" aria-label="Admin Navigation">
@@ -36,6 +37,26 @@ export function AdminSidebar({ sessionEmail }: { sessionEmail: string }) {
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           <span>Inquiries</span>
+        </Link>
+
+        <Link
+          href="/admin/applications"
+          className={`admin-nav-item ${isApplications ? "active" : ""}`}
+          aria-current={isApplications ? "page" : undefined}
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="3" y="7" width="18" height="13" rx="2" />
+            <path d="M9 7V5h6v2M3 12h18" />
+          </svg>
+          <span>Applications</span>
         </Link>
 
         <Link
