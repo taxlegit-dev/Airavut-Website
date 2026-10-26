@@ -1,25 +1,31 @@
-import { ViewTransition } from "react";
+import { Fragment, ViewTransition, type ReactNode } from "react";
 import { getSiteFragment } from "@/lib/site-content";
 import { withLayeredHeroArt } from "@/lib/hero-art";
 import type { PageSlug } from "@/lib/site";
 import { InquiryForm } from "@/components/InquiryForm";
+import { CareerApplicationForm } from "@/components/CareerApplicationForm";
 import Image from "next/image";
 
 // Only navigations started by SiteInteractions carry the "page" type, so
 // browser back/forward and in-page updates swap instantly instead of animating.
 const pageTransition = { page: "page-swap", default: "none" } as const;
 
+// Placeholders in site-content/*.html that are replaced with interactive React sections.
+const slots: Record<string, () => ReactNode> = {
+  AIRAVUT_INQUIRY_SECTION_SLOT: () => <InquirySection />,
+  AIRAVUT_CAREER_APPLICATION_SLOT: () => <CareerApplicationSection />
+};
+const slotPattern = new RegExp(`(${Object.keys(slots).join("|")})`);
+
 export async function ContentPage({ slug }: { slug: PageSlug }) {
   const html = withLayeredHeroArt(await getSiteFragment(slug));
-  const [before, after] = html.split("AIRAVUT_INQUIRY_SECTION_SLOT");
+  const parts = html.split(slotPattern);
 
   return (
     <ViewTransition enter={pageTransition} exit={pageTransition} default="none">
       <main id="main" tabIndex={-1}>
         <div className="page" data-page={slug}>
-          <div dangerouslySetInnerHTML={{ __html: before }} />
-          {after !== undefined ? <InquirySection /> : null}
-          {after !== undefined ? <div dangerouslySetInnerHTML={{ __html: after }} /> : null}
+          {parts.map((part, index) => <Fragment key={index}>{slots[part] ? slots[part]() : <div dangerouslySetInnerHTML={{ __html: part }} />}</Fragment>)}
         </div>
       </main>
     </ViewTransition>
@@ -40,6 +46,26 @@ function InquirySection() {
             <a className="textlink" href="/talk-to-us#talk-to-us-ways">See ways to work together</a>
           </div>
           <InquiryForm />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CareerApplicationSection() {
+  return (
+    <section className="sec sec-a" id="career-apply" aria-labelledby="career-apply-title">
+      <Image alt="" className="sec-art art-bottom" fill sizes="100vw" src="/media/ambient-orbit-bottom.svg" />
+      <div className="wrap">
+        <div className="split">
+          <div className="col" style={{ maxWidth: "none" }}>
+            <p className="eyebrow">Apply now</p>
+            <h2 className="h2" id="career-apply-title">Grow Your Career with Airavut.</h2>
+            <p className="lede">Share a few details about yourself and the role you are interested in. It takes about three minutes.</p>
+            <p>We review every application across teaching, academic, operations, examinations, publishing and technology roles. If your profile matches a current or upcoming opening, our team will contact you directly.</p>
+            <a className="textlink" href="#career-why">See the roles we hire for</a>
+          </div>
+          <CareerApplicationForm />
         </div>
       </div>
     </section>

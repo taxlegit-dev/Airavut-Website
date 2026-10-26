@@ -113,3 +113,8 @@ body { overflow-x: clip; }
   from { opacity: 0; transform: scale(0.92) translateY(10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
+
+/* Career application form (reuses the inquiry form styles above) */
+.step-list-3 { grid-template-columns: repeat(3,1fr); }
+.char-count { align-self: flex-end; color: var(--faint); font-size: 12px; }
+.hp-field { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }

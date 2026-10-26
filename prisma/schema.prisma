@@ -70,3 +70,38 @@ model AdminUser {
 
   @@map("admin_users")
 }
+
+enum CareerApplicationStatus {
+  NEW
+  IN_REVIEW
+  SHORTLISTED
+  REJECTED
+}
+
+model CareerApplication {
+  id           String                  @id @default(uuid()) @db.Uuid
+  createdAt    DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+  fullName     String                  @map("full_name") @db.VarChar(100)
+  email        String                  @db.VarChar(254)
+  phone        String                  @db.VarChar(20)
+  location     String                  @db.VarChar(120)
+  linkedinUrl  String                  @map("linkedin_url") @db.VarChar(500)
+  resumeUrl    String                  @map("resume_url") @db.VarChar(1000)
+  portfolioUrl String?                 @map("portfolio_url") @db.VarChar(1000)
+  experience   String                  @db.VarChar(40)
+  role         String                  @db.VarChar(40)
+  noticePeriod String                  @map("notice_period") @db.VarChar(20)
+  whyJoinUs    String                  @map("why_join_us") @db.VarChar(2000)
+  status       CareerApplicationStatus @default(NEW)
+  ipHash       String                  @map("ip_hash") @db.Char(64)
+  fingerprint  String                  @unique(map: "career_applications_fingerprint_key") @db.Char(64)
+
+  @@index([createdAt(sort: Desc)], map: "career_applications_created_at_idx")
+  @@index([status, createdAt(sort: Desc)], map: "career_applications_status_created_at_idx")
+  @@index([role], map: "career_applications_role_idx")
+  @@index([experience], map: "career_applications_experience_idx")
+  @@index([email], map: "career_applications_email_idx")
+  @@index([ipHash, createdAt], map: "career_applications_ip_hash_created_at_idx")
+  @@map("career_applications")
+}
