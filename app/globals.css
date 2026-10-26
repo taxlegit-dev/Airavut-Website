@@ -118,3 +118,27 @@ body { overflow-x: clip; }
 .step-list-3 { grid-template-columns: repeat(3,1fr); }
 .char-count { align-self: flex-end; color: var(--faint); font-size: 12px; }
 .hp-field { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+/* Coming soon landing pages for Ikigai verticals */
+.coming-soon { position: relative; overflow: hidden; min-height: 100svh; display: flex; align-items: center; background: var(--navy); }
+.coming-soon-inner { position: relative; z-index: 1; width: min(1440px, 100% - 2*var(--gut)); padding-block: calc(88px + env(safe-area-inset-top, 0px) + 40px) 96px; display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center; }
+.coming-soon-inner .eyebrow { margin: 0; }
+.coming-soon-title { margin: 0 0 -.18em; padding-bottom: .18em; font-family: var(--ff-display); font-weight: 600; font-size: clamp(56px, 11vw, 168px); line-height: 1.05; letter-spacing: -.03em; background: linear-gradient(100deg, var(--gold-l) 0%, var(--gold) 55%, #fff3cf 100%); -webkit-background-clip: text; background-clip: text; color: transparent; text-wrap: balance; }
+.coming-soon-inner .lede { max-width: 46ch; margin: 0; }
+.coming-soon-inner .actions { justify-content: center; margin-top: 8px; }
+
+/* Phone OTP verification (Talk to Us and career forms) */
+.phone-verify { display: grid; gap: 8px; }
+.phone-verify-row { display: flex; gap: 10px; align-items: stretch; }
+.phone-verify-row input { flex: 1; min-width: 0; }
+.enq .phone-verify-btn { min-height: 0; padding: 0 20px; border: 1px solid var(--gold); border-radius: 12px; background: transparent; color: var(--gold-l); font-size: 15px; font-weight: 500; white-space: nowrap; transition: background-color .2s, color .2s; }
+.enq .phone-verify-btn:hover:not(:disabled) { background: var(--gold); color: var(--navy); }
+.enq .phone-verify-btn:disabled { opacity: .5; cursor: not-allowed; }
+.phone-verify-badge { display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; border: 1px solid rgba(155,231,176,.45); border-radius: 12px; background: rgba(155,231,176,.08); color: #9be7b0; font-family: var(--ff-display); font-size: 15px; white-space: nowrap; }
+.phone-verify-otp { margin-top: 4px; }
+.phone-verify-otp input { letter-spacing: .4em; font-variant-numeric: tabular-nums; }
+.phone-verify-note { color: var(--muted); font-size: 13px; }
+@media (max-width: 560px) {
+  .phone-verify-row { flex-direction: column; }
+  .enq .phone-verify-btn, .phone-verify-badge { min-height: 48px; justify-content: center; }
+}

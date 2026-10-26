@@ -33,15 +33,7 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatusValue, string> =
 
 export const APPLICATION_STATUS_OPTIONS = APPLICATION_STATUSES.map((value) => ({ value, label: APPLICATION_STATUS_LABELS[value] }));
 
-export const LIMITS = { fullName: 100, email: 254, phone: 20, location: 120, linkedinUrl: 500, resumeUrl: 1000, portfolioUrl: 1000, whyJoinUsMin: 20, whyJoinUsMax: 2000 } as const;
-
-export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const PHONE_PATTERN = /^\+?[()\-\s\d]{7,20}$/;
-
-export function isValidPhone(value: string) {
-  const digits = value.replace(/\D/g, "").length;
-  return PHONE_PATTERN.test(value) && digits >= 7 && digits <= 15;
-}
+export const LIMITS = { fullName: 100, email: 254, location: 120, linkedinUrl: 500, resumeUrl: 1000, portfolioUrl: 1000, whyJoinUsMin: 20, whyJoinUsMax: 2000 } as const;
 
 /** Adds https:// when the scheme is omitted, so "linkedin.com/in/name" is accepted. */
 export function normalizeUrl(value: string) {

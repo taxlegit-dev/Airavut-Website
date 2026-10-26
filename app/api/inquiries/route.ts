@@ -4,6 +4,7 @@ import { sendInquiryNotifications } from "@/lib/email";
 // import { inquirySchema, verifyTurnstile } from "@/lib/inquiries";
 import { DUPLICATE_INQUIRY_MESSAGE, findExistingInquiry, inquirySchema } from "@/lib/inquiries";
 import { prisma } from "@/lib/prisma";
+import { isPhoneTokenValid, otpRequired } from "@/lib/otp";
 import { hasValidOrigin, keyedHash, requestIp } from "@/lib/security";
 
 export const runtime = "nodejs";
@@ -38,6 +39,9 @@ export async function POST(request: Request) {
     if (!form) return NextResponse.json({ message: "A valid multipart form submission is required." }, { status: 400 });
     const parsed = inquirySchema.safeParse(Object.fromEntries([...form.entries()].filter(([, value]) => typeof value === "string")));
     if (!parsed.success) return NextResponse.json({ message: "Please review the form fields and try again." }, { status: 400 });
+    if (otpRequired() && !isPhoneTokenValid(parsed.data.phoneVerificationToken, parsed.data.phone)) {
+      return NextResponse.json({ message: "Please verify your phone number with the OTP before submitting." }, { status: 400 });
+    }
 
     const ip = await requestIp();
     const ipHash = keyedHash(ip);

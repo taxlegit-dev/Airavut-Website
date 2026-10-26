@@ -1,6 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
+import { isValidEmail, isValidPhone } from "@/lib/contact-validation";
 import { prisma } from "@/lib/prisma";
 
 const clean = (value: string) => value.replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ").trim();
@@ -9,14 +10,15 @@ export const DUPLICATE_INQUIRY_MESSAGE = "Your inquiry has already been received
 
 export const inquirySchema = z.object({
   fullName: z.string().transform(clean).pipe(z.string().min(2).max(100)),
-  email: z.string().transform((value) => clean(value).toLowerCase()).pipe(z.string().email().max(254)),
-  phone: z.string().transform(clean).pipe(z.string().regex(/^[+()\-\s\d]{7,20}$/)),
+  email: z.string().transform((value) => clean(value).toLowerCase()).pipe(z.string().max(254).refine(isValidEmail)),
+  phone: z.string().transform(clean).pipe(z.string().refine(isValidPhone)),
   organisation: z.string().transform(clean).pipe(z.string().min(2).max(150)),
   area: z.enum(["Schools & Universities", "Examination & Certification Bodies", "Strategic & Institutional Partners", "Investors & Financial Institutions", "Media"]),
   message: z.string().transform(clean).pipe(z.string().min(10).max(2000)),
   // Temporarily disabled Turnstile anti-spam verification:
   // turnstileToken: z.string().min(1).max(2048)
-  turnstileToken: z.string().optional()
+  turnstileToken: z.string().optional(),
+  phoneVerificationToken: z.string().max(500).optional()
 });
 
 export const statusSchema = z.enum(["NEW", "CONTACTED", "IN_REVIEW", "CLOSED"]);

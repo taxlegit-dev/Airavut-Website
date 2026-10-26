@@ -194,6 +194,12 @@
    frame. Sections get their life from scroll parallax (below) and the drifting colour orbs. */
 @supports (animation-timeline: view()) {
   .sec > .sec-art, .site-foot > .sec-art { top: -60px; height: calc(100% + 120px); }
+  /* The art overhangs its section by 60px and drifts up to 50px, so start the edge fade 110px in
+     to keep it fully transparent wherever the section clips it (no hard seams between sections). */
+  .sec > .sec-art, .site-foot > .sec-art {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, transparent 110px, #000 250px, #000 calc(100% - 250px), transparent calc(100% - 110px));
+    mask-image: linear-gradient(180deg, transparent 0, transparent 110px, #000 250px, #000 calc(100% - 250px), transparent calc(100% - 110px));
+  }
   .sec > .sec-art, .site-foot > .sec-art {
     animation: sec-parallax linear both;
     animation-timeline: view();

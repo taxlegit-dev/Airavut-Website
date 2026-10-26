@@ -4,6 +4,7 @@ import { withLayeredHeroArt } from "@/lib/hero-art";
 import type { PageSlug } from "@/lib/site";
 import { InquiryForm } from "@/components/InquiryForm";
 import { CareerApplicationForm } from "@/components/CareerApplicationForm";
+import { otpRequired } from "@/lib/otp";
 import Image from "next/image";
 
 // Only navigations started by SiteInteractions carry the "page" type, so
@@ -45,7 +46,7 @@ function InquirySection() {
             <p>We welcome conversations with investors, bankers, universities, schools, examination bodies, strategic partners, media and professionals who want to work with the Airavut ecosystem.</p>
             <a className="textlink" href="/talk-to-us#talk-to-us-ways">See ways to work together</a>
           </div>
-          <InquiryForm />
+          <InquiryForm otpRequired={otpRequired()} />
         </div>
       </div>
     </section>
@@ -65,7 +66,7 @@ function CareerApplicationSection() {
             <p>We review every application across teaching, academic, operations, examinations, publishing and technology roles. If your profile matches a current or upcoming opening, our team will contact you directly.</p>
             <a className="textlink" href="#career-why">See the roles we hire for</a>
           </div>
-          <CareerApplicationForm />
+          <CareerApplicationForm otpRequired={otpRequired()} />
         </div>
       </div>
     </section>
