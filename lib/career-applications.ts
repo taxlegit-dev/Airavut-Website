@@ -8,10 +8,10 @@ import {
   NOTICE_PERIOD_OPTIONS,
   ROLE_OPTIONS,
   isLinkedInUrl,
-  isValidPhone,
   normalizeUrl,
   parseHttpUrl
 } from "@/lib/career";
+import { isValidEmail, isValidPhone } from "@/lib/contact-validation";
 
 const clean = (value: string) => value.replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ").trim();
 // Keeps line breaks in the motivation statement while stripping other control characters.
@@ -22,8 +22,8 @@ export const DUPLICATE_APPLICATION_MESSAGE = "We have already received your appl
 
 export const careerApplicationSchema = z.object({
   fullName: z.string().transform(clean).pipe(z.string().min(2).max(LIMITS.fullName)),
-  email: z.string().transform((value) => clean(value).toLowerCase()).pipe(z.string().email().max(LIMITS.email)),
-  phone: z.string().transform(clean).pipe(z.string().max(LIMITS.phone).refine(isValidPhone)),
+  email: z.string().transform((value) => clean(value).toLowerCase()).pipe(z.string().max(LIMITS.email).refine(isValidEmail)),
+  phone: z.string().transform(clean).pipe(z.string().refine(isValidPhone)),
   location: z.string().transform(clean).pipe(z.string().min(2).max(LIMITS.location)),
   linkedinUrl: url(LIMITS.linkedinUrl).refine(isLinkedInUrl),
   resumeUrl: url(LIMITS.resumeUrl),
@@ -32,6 +32,7 @@ export const careerApplicationSchema = z.object({
   role: z.enum(ROLE_OPTIONS),
   noticePeriod: z.enum(NOTICE_PERIOD_OPTIONS),
   whyJoinUs: z.string().transform(cleanMultiline).pipe(z.string().min(LIMITS.whyJoinUsMin).max(LIMITS.whyJoinUsMax)),
+  phoneVerificationToken: z.string().max(500).optional(),
   // Honeypot: hidden from people, so any value marks the submission as automated.
   website: z.string().max(200).optional()
 });

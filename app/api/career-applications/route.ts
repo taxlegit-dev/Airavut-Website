@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { DUPLICATE_APPLICATION_MESSAGE, careerApplicationSchema } from "@/lib/career-applications";
 import { prisma } from "@/lib/prisma";
+import { isPhoneTokenValid, otpRequired } from "@/lib/otp";
 import { hasValidOrigin, keyedHash, requestIp } from "@/lib/security";
 
 export const runtime = "nodejs";
@@ -29,10 +30,14 @@ export async function POST(request: Request) {
       const fields = [...new Set(parsed.error.issues.map((issue) => String(issue.path[0] ?? "")).filter(Boolean))];
       return NextResponse.json({ message: "Please review the highlighted fields and try again.", fields }, { status: 400 });
     }
-    const { website, ...data } = parsed.data;
+    const { website, phoneVerificationToken, ...data } = parsed.data;
 
     // Pretend success to automated submissions so bots get no signal to adapt to.
     if (website) return NextResponse.json({ message: "Thank you. Your application has been received." }, { status: 201 });
+
+    if (otpRequired() && !isPhoneTokenValid(phoneVerificationToken, data.phone)) {
+      return NextResponse.json({ message: "Please verify your phone number with the OTP before submitting.", fields: ["phone"] }, { status: 400 });
+    }
 
     const ipHash = keyedHash(await requestIp());
     const recent = await prisma.careerApplication.count({ where: { ipHash, createdAt: { gte: new Date(Date.now() - 15 * 60 * 1000) } } });

@@ -3,6 +3,8 @@
 // Temporarily disabled Turnstile anti-spam verification:
 // import Script from "next/script";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PHONE_ERROR, emailError, isValidPhone } from "@/lib/contact-validation";
+import { PhoneVerification } from "@/components/PhoneVerification";
 
 declare global {
   interface Window {
@@ -24,15 +26,17 @@ const inquiryAreas = [
 
 type FieldErrors = Record<string, string>;
 
-function firstInvalidField(step: number, form: HTMLFormElement): FieldErrors {
+function firstInvalidField(step: number, form: HTMLFormElement, otpRequired: boolean): FieldErrors {
   const data = new FormData(form);
   const errors: FieldErrors = {};
   const value = (name: string) => String(data.get(name) ?? "").trim();
 
   if (step === 0) {
     if (value("fullName").length < 2) errors.fullName = "Enter your full name.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value("email"))) errors.email = "Enter a valid email address.";
-    if (!/^[+()\-\s\d]{7,20}$/.test(value("phone"))) errors.phone = "Enter a valid phone or WhatsApp number.";
+    const emailProblem = emailError(value("email"));
+    if (emailProblem) errors.email = emailProblem;
+    if (!isValidPhone(value("phone"))) errors.phone = PHONE_ERROR;
+    else if (otpRequired && !value("phoneVerificationToken")) errors.phone = "Verify your phone number with the OTP before continuing.";
   }
   if (step === 1) {
     if (value("organisation").length < 2) errors.organisation = "Enter your organisation name.";
@@ -47,7 +51,7 @@ function firstInvalidField(step: number, form: HTMLFormElement): FieldErrors {
   return errors;
 }
 
-export function InquiryForm() {
+export function InquiryForm({ otpRequired = true }: { otpRequired?: boolean }) {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [selectedArea, setSelectedArea] = useState("");
@@ -109,7 +113,7 @@ export function InquiryForm() {
   const move = async (direction: 1 | -1) => {
     if (!formRef.current) return;
     if (direction === 1) {
-      const nextErrors = firstInvalidField(step, formRef.current);
+      const nextErrors = firstInvalidField(step, formRef.current, otpRequired);
       setErrors(nextErrors);
       const first = Object.keys(nextErrors)[0];
       if (first) {
@@ -153,8 +157,8 @@ export function InquiryForm() {
     event.preventDefault();
     const form = formRef.current;
     if (!form) return;
-    const step0Errors = firstInvalidField(0, form);
-    const step1Errors = firstInvalidField(1, form);
+    const step0Errors = firstInvalidField(0, form, otpRequired);
+    const step1Errors = firstInvalidField(1, form, otpRequired);
     const nextErrors = { ...step0Errors, ...step1Errors };
     setErrors(nextErrors);
     if (Object.keys(step0Errors).length) {
@@ -260,42 +264,35 @@ export function InquiryForm() {
             />
             <FieldError text={errors.fullName} />
           </label>
-          <div className="frow">
-            <label>
-              Email address
-              <input
-                name="email"
-                type="email"
-                autoComplete="email"
-                maxLength={254}
-                aria-invalid={Boolean(errors.email)}
-                onChange={(e) => {
-                  if (errors.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value.trim())) {
-                    setErrors((cur) => { const next = { ...cur }; delete next.email; return next; });
-                  }
-                }}
-                required
-              />
-              <FieldError text={errors.email} />
-            </label>
-            <label>
-              Phone / WhatsApp
-              <input
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                maxLength={20}
-                aria-invalid={Boolean(errors.phone)}
-                onChange={(e) => {
-                  if (errors.phone && /^[+()\-\s\d]{7,20}$/.test(e.target.value.trim())) {
-                    setErrors((cur) => { const next = { ...cur }; delete next.phone; return next; });
-                  }
-                }}
-                required
-              />
-              <FieldError text={errors.phone} />
-            </label>
-          </div>
+          <label>
+            Email address
+            <input
+              name="email"
+              type="email"
+              autoComplete="email"
+              maxLength={254}
+              aria-invalid={Boolean(errors.email)}
+              onChange={(e) => {
+                if (errors.email && !emailError(e.target.value)) {
+                  setErrors((cur) => { const next = { ...cur }; delete next.email; return next; });
+                }
+              }}
+              required
+            />
+            <FieldError text={errors.email} />
+          </label>
+          <PhoneVerification
+            id="inquiry-phone"
+            verify={otpRequired}
+            label="Phone / WhatsApp"
+            error={errors.phone}
+            onPhoneChange={(digits) => {
+              if (errors.phone && isValidPhone(digits)) setErrors((cur) => { const next = { ...cur }; delete next.phone; return next; });
+            }}
+            onVerifiedChange={(token) => {
+              if (token) setErrors((cur) => { const next = { ...cur }; delete next.phone; return next; });
+            }}
+          />
         </fieldset>
 
         <fieldset className={step === 1 ? "form-step active" : "form-step"} aria-hidden={step !== 1}>

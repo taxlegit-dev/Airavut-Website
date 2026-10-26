@@ -2,16 +2,16 @@
 
 import { FormEvent, useMemo, useRef, useState } from "react";
 import {
-  EMAIL_PATTERN,
   EXPERIENCE_OPTIONS,
   LIMITS,
   NOTICE_PERIOD_OPTIONS,
   ROLE_OPTIONS,
   isLinkedInUrl,
-  isValidPhone,
   normalizeUrl,
   parseHttpUrl
 } from "@/lib/career";
+import { PHONE_ERROR, emailError, isValidPhone } from "@/lib/contact-validation";
+import { PhoneVerification } from "@/components/PhoneVerification";
 
 const steps = ["Contact", "Profile & links", "Role & motivation"] as const;
 const stepFields = [
@@ -34,8 +34,8 @@ function validateField(name: FieldName, raw: string): string {
   const value = raw.trim();
   switch (name) {
     case "fullName": return value.length >= 2 ? "" : "Enter your full name (at least 2 characters).";
-    case "email": return EMAIL_PATTERN.test(value) ? "" : "Enter a valid email address.";
-    case "phone": return isValidPhone(value) ? "" : "Enter a valid phone or WhatsApp number, e.g. +91 98765 43210.";
+    case "email": return emailError(value);
+    case "phone": return isValidPhone(value) ? "" : PHONE_ERROR;
     case "location": return value.length >= 2 ? "" : "Enter your current city or location.";
     case "linkedinUrl":
       if (!value) return "Enter your LinkedIn profile URL.";
@@ -66,11 +66,14 @@ function validateStep(step: number, values: Values): FieldErrors {
   return errors;
 }
 
-export function CareerApplicationForm() {
+export function CareerApplicationForm({ otpRequired = true }: { otpRequired?: boolean }) {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [values, setValues] = useState<Values>(emptyValues);
   const [honeypot, setHoneypot] = useState("");
+  const [phoneToken, setPhoneToken] = useState<string | null>(null);
+  // Bumped to reset the phone field when the server rejects an expired verification.
+  const [phoneKey, setPhoneKey] = useState(0);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -107,8 +110,15 @@ export function CareerApplicationForm() {
     if (first) focusField(first);
   };
 
+  // Step validation plus the OTP requirement, which lives outside the plain field values.
+  const checkStep = (index: number) => {
+    const stepErrors = validateStep(index, values);
+    if (otpRequired && index === 0 && !stepErrors.phone && !phoneToken) stepErrors.phone = "Verify your phone number with the OTP before continuing.";
+    return stepErrors;
+  };
+
   const next = () => {
-    const stepErrors = validateStep(step, values);
+    const stepErrors = checkStep(step);
     if (Object.keys(stepErrors).length) return showErrors(stepErrors);
     setErrors({});
     goTo(Math.min(steps.length - 1, step + 1));
@@ -121,7 +131,7 @@ export function CareerApplicationForm() {
     if (step < steps.length - 1) return next();
 
     for (let index = 0; index < steps.length; index += 1) {
-      const stepErrors = validateStep(index, values);
+      const stepErrors = checkStep(index);
       if (Object.keys(stepErrors).length) {
         if (index !== step) goTo(index);
         return showErrors(stepErrors);
@@ -136,6 +146,7 @@ export function CareerApplicationForm() {
         linkedinUrl: normalizeUrl(values.linkedinUrl),
         resumeUrl: normalizeUrl(values.resumeUrl),
         portfolioUrl: normalizeUrl(values.portfolioUrl),
+        phoneVerificationToken: phoneToken ?? "",
         website: honeypot
       };
       const response = await fetch("/api/career-applications", {
@@ -148,6 +159,12 @@ export function CareerApplicationForm() {
         const serverFields = (result.fields ?? []).filter((name): name is FieldName => name in emptyValues);
         if (serverFields.length) {
           const fieldErrors = Object.fromEntries(serverFields.map((name) => [name, validateField(name, values[name]) || "Please check this field."])) as FieldErrors;
+          if (serverFields.includes("phone") && isValidPhone(values.phone)) {
+            // The number is fine, so the verification expired: ask for a fresh OTP.
+            fieldErrors.phone = "Your phone verification expired. Please verify your number again.";
+            setPhoneToken(null);
+            setPhoneKey((key) => key + 1);
+          }
           const firstStep = stepFields.findIndex((fields) => fields.some((name) => serverFields.includes(name)));
           if (firstStep >= 0 && firstStep !== step) goTo(firstStep);
           showErrors(fieldErrors);
@@ -223,17 +240,22 @@ export function CareerApplicationForm() {
               <input {...field("email")} type="email" autoComplete="email" inputMode="email" maxLength={LIMITS.email} onChange={(e) => update("email", e.target.value)} required />
               <FieldError id="career-email-error" text={errors.email} />
             </label>
-            <label htmlFor="career-phone">
-              Phone / WhatsApp number
-              <input {...field("phone")} type="tel" autoComplete="tel" inputMode="tel" maxLength={LIMITS.phone} onChange={(e) => update("phone", e.target.value)} required />
-              <FieldError id="career-phone-error" text={errors.phone} />
+            <label htmlFor="career-location">
+              Current city / location
+              <input {...field("location")} autoComplete="address-level2" maxLength={LIMITS.location} onChange={(e) => update("location", e.target.value)} required />
+              <FieldError id="career-location-error" text={errors.location} />
             </label>
           </div>
-          <label htmlFor="career-location">
-            Current city / location
-            <input {...field("location")} autoComplete="address-level2" maxLength={LIMITS.location} onChange={(e) => update("location", e.target.value)} required />
-            <FieldError id="career-location-error" text={errors.location} />
-          </label>
+          <PhoneVerification
+            key={phoneKey}
+            id="career-phone"
+            verify={otpRequired}
+            initialPhone={values.phone}
+            label="Phone / WhatsApp number"
+            error={errors.phone}
+            onPhoneChange={(phone) => update("phone", phone)}
+            onVerifiedChange={(token) => { setPhoneToken(token); if (token) setErrors((current) => ({ ...current, phone: "" })); }}
+          />
         </fieldset>
 
         <fieldset className={step === 1 ? "form-step active" : "form-step"} aria-hidden={step !== 1} disabled={step !== 1}>

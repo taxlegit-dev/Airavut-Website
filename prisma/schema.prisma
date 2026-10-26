@@ -105,3 +105,19 @@ model CareerApplication {
   @@index([ipHash, createdAt], map: "career_applications_ip_hash_created_at_idx")
   @@map("career_applications")
 }
+
+// Phone OTP challenges for the public forms. Only hashes are stored; rows can be purged after a day.
+model OtpVerification {
+  id         String    @id @default(uuid()) @db.Uuid
+  phoneHash  String    @map("phone_hash") @db.Char(64)
+  codeHash   String    @map("code_hash") @db.Char(64)
+  ipHash     String    @map("ip_hash") @db.Char(64)
+  attempts   Int       @default(0)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  verifiedAt DateTime? @map("verified_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([phoneHash, createdAt(sort: Desc)], map: "otp_verifications_phone_hash_created_at_idx")
+  @@index([ipHash, createdAt], map: "otp_verifications_ip_hash_created_at_idx")
+  @@map("otp_verifications")
+}
