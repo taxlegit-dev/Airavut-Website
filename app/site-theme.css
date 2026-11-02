@@ -65,7 +65,6 @@ p{margin:0}
 .ind.is-active{width:68px}
 .pause{width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:transparent;color:#fff;cursor:pointer;margin-left:10px;display:flex;align-items:center;justify-content:center}
 .pause svg{fill:#C9D1EA}.pause .p2{display:none}.pause[aria-pressed="true"] .p1{display:none}.pause[aria-pressed="true"] .p2{display:block}
-.hashtag{font-family:var(--ff-display);font-size:18px}
 
 /* sections */
 .sec{position:relative;overflow:hidden;padding-block:clamp(88px,9vw,150px)}
@@ -393,7 +392,6 @@ p{margin:0}
  .hero-inner,.slide-copy>*{width:auto;max-width:min(680px,100%)}
  :is(.hero,.ihero) .display{font-size:clamp(27px,min(7.2vw,5.4svh),56px);max-width:20ch}
  :is(.hero,.ihero) .actions{gap:12px 28px}
- .hashtag{display:none}
 }
 /* Small phones: drop the repeated tagline so the CTAs stay on the first screen. */
 @media (max-width:1023px) and (min-height:541px) and (max-height:760px){
