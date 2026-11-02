@@ -125,6 +125,9 @@
 .ihero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(10,16,34,0), var(--navy)); }
 .hero .slide::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16%; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(10,16,34,0), var(--navy)); }
 .ihero .art { z-index: 0; }
+/* SplitText line masks clip at the line box, which cuts off descenders (g, p, y) on tight
+   line-heights; the clip margin keeps them visible on every split heading. */
+.line-mask { overflow-clip-margin: .2em; }
 .hero-inner .display .line-mask, .slide-copy .display .line-mask { overflow: clip; overflow-clip-margin: .14em; padding-bottom: .04em; }
 
 /* --------------------------------------------------------------------------
@@ -431,7 +434,8 @@ html.is-navigating { cursor: progress; }
 .rv-iris:not(.in) img { transform: scale(1.3); }
 .rv.rv-lines, .rv.rv-draw { transition: none; }
 .rv-lines .line { transition: transform 1.15s var(--ease-out) calc(var(--d, 0ms) + var(--li, 0) * 90ms); }
-.rv-lines:not(.in) .line { transform: translate3d(0, 112%, 0); }
+/* Start far enough below the mask (plus its clip margin) that no part of the line peeks out. */
+.rv-lines:not(.in) .line { transform: translate3d(0, 125%, 0); }
 
 /* --------------------------------------------------------------------------
    Responsive
