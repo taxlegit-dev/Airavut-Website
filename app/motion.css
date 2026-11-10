@@ -343,6 +343,10 @@ html.is-navigating { cursor: progress; }
 }
 .card:hover { translate: 0 -4px; border-color: rgba(242,217,138,.42); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 26px 70px rgba(0,0,0,.24); }
 .card:hover::before { opacity: 1; }
+/* Pointer tilt and magnetic buttons (lib/motion/micro-interactions.ts) only feed these
+   custom properties; the scroll reveal and hover lift keep their own transform/translate. */
+.card.tilt { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
+.btn.magnetic { transform: translate3d(var(--bx, 0px), var(--by, 0px), 0); }
 .card .iring, .tile .iring, .reach .iring { transition: transform .55s var(--ease-out), box-shadow .55s var(--ease-premium), border-color .5s; }
 .card:hover .iring, .card:focus-within .iring, .reach > div:hover .iring {
   transform: translateY(-3px) rotate(-6deg) scale(1.07);

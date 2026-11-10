@@ -4,9 +4,9 @@ export const pages = {
   home: {
     slug: "home",
     path: "/",
-    title: "Airavut Education Ventures | Performing Arts Education, Certification & Publishing",
+    title: "Airavut Education Ventures | An Integrated Performing Arts Education Ecosystem",
     description:
-      "Airavut Education Ventures is building an integrated performing arts education platform: Ikigai Schools, Ikigai Exams & Certifications and Ikigai Publishing. ISO-certified, from India for the world."
+      "Airavut Education Ventures connects performing arts learning, skill development, examinations, certification and publishing through an integrated education ecosystem."
   },
   ecosystem: {
     slug: "ecosystem",

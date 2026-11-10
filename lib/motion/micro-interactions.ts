@@ -6,6 +6,12 @@ type Cleanup = () => void;
  * Pointer-driven polish for desktop: card tilt with a cursor spotlight, and magnetic
  * primary buttons. Geometry is measured once per hover (not per move) and updates are
  * coalesced to one per frame.
+ *
+ * GSAP never touches `transform` on these elements. It tweens plain numbers and writes them
+ * to CSS custom properties that app/motion.css composes (.tilt / .magnetic). Letting GSAP own
+ * `transform` made it snapshot whatever offset the card had on first hover — a scroll reveal
+ * still sliding in, or the hover lift — and pin it inline, leaving cards out of line until a
+ * reload.
  */
 export function mountMicroInteractions(reduceMotion: boolean): Cleanup {
   const cleanups: Cleanup[] = [];
@@ -14,8 +20,14 @@ export function mountMicroInteractions(reduceMotion: boolean): Cleanup {
   if (finePointer && !reduceMotion) {
     document.querySelectorAll<HTMLElement>("main .card:not(.roles):not(.enq)").forEach((card) => {
       const tilt = !card.closest(".grid2, .addr, .pair");
-      const rotateX = gsap.quickTo(card, "rotateX", { duration: 0.6, ease: "power3.out" });
-      const rotateY = gsap.quickTo(card, "rotateY", { duration: 0.6, ease: "power3.out" });
+      const angle = { x: 0, y: 0 };
+      const paint = () => {
+        card.style.setProperty("--rx", `${angle.x.toFixed(2)}deg`);
+        card.style.setProperty("--ry", `${angle.y.toFixed(2)}deg`);
+      };
+      const rotateX = gsap.quickTo(angle, "x", { duration: 0.6, ease: "power3.out", onUpdate: paint });
+      const rotateY = gsap.quickTo(angle, "y", { duration: 0.6, ease: "power3.out", onUpdate: paint });
+      if (tilt) card.classList.add("tilt");
       let bounds: DOMRect | undefined;
       let frame = 0;
       let px = 0.5;
@@ -32,7 +44,6 @@ export function mountMicroInteractions(reduceMotion: boolean): Cleanup {
       };
       const enter = () => {
         bounds = card.getBoundingClientRect();
-        gsap.set(card, { transformPerspective: 900 });
       };
       const move = (event: PointerEvent) => {
         if (!bounds) enter();
@@ -42,24 +53,35 @@ export function mountMicroInteractions(reduceMotion: boolean): Cleanup {
       };
       const leave = () => {
         bounds = undefined;
-        rotateX(0);
-        rotateY(0);
+        if (tilt) {
+          rotateX(0);
+          rotateY(0);
+        }
       };
       card.addEventListener("pointerenter", enter);
       card.addEventListener("pointermove", move, { passive: true });
       card.addEventListener("pointerleave", leave);
       cleanups.push(() => {
         cancelAnimationFrame(frame);
+        gsap.killTweensOf(angle);
         card.removeEventListener("pointerenter", enter);
         card.removeEventListener("pointermove", move);
         card.removeEventListener("pointerleave", leave);
-        gsap.set(card, { clearProps: "transform" });
+        card.classList.remove("tilt");
+        card.style.removeProperty("--rx");
+        card.style.removeProperty("--ry");
       });
     });
 
     document.querySelectorAll<HTMLElement>("main .btn:not(.btn-ghost)").forEach((button) => {
-      const x = gsap.quickTo(button, "x", { duration: 0.5, ease: "power3.out" });
-      const y = gsap.quickTo(button, "y", { duration: 0.5, ease: "power3.out" });
+      const offset = { x: 0, y: 0 };
+      const paint = () => {
+        button.style.setProperty("--bx", `${offset.x.toFixed(2)}px`);
+        button.style.setProperty("--by", `${offset.y.toFixed(2)}px`);
+      };
+      const x = gsap.quickTo(offset, "x", { duration: 0.5, ease: "power3.out", onUpdate: paint });
+      const y = gsap.quickTo(offset, "y", { duration: 0.5, ease: "power3.out", onUpdate: paint });
+      button.classList.add("magnetic");
       let bounds: DOMRect | undefined;
       const move = (event: PointerEvent) => {
         bounds ??= button.getBoundingClientRect();
@@ -74,9 +96,12 @@ export function mountMicroInteractions(reduceMotion: boolean): Cleanup {
       button.addEventListener("pointermove", move, { passive: true });
       button.addEventListener("pointerleave", leave);
       cleanups.push(() => {
+        gsap.killTweensOf(offset);
         button.removeEventListener("pointermove", move);
         button.removeEventListener("pointerleave", leave);
-        gsap.set(button, { clearProps: "transform" });
+        button.classList.remove("magnetic");
+        button.style.removeProperty("--bx");
+        button.style.removeProperty("--by");
       });
     });
   }
