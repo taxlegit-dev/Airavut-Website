@@ -69,7 +69,7 @@ export function mountScrollMotion(scope: HTMLElement, reduceMotion: boolean): Cl
   // Everything else rises.
   mark(
     scope.querySelectorAll(
-      ".sec :is(.grid2, .grid3, .grid4, .pcards, .trio, .addr, .reach, .pair, .stats, .stats3, .statements, .rolecols) > *, .sec :is(.head, .col, .ftext, .center, .tier, .split > div, .card.roles) > *, .sec .note, .sec .statement, .sec .motto, .sec .quote, .sec .fquote, .sec .side-statement, .journey li > span:last-child, .lppc li > span:last-child"
+      ".sec .tiles-lead, .sec :is(.tiles, .grid2, .grid3, .grid4, .pcards, .trio, .addr, .reach, .pair, .stats, .stats3, .statements, .rolecols) > *, .sec :is(.head, .col, .ftext, .center, .tier, .split > div, .card.roles) > *, .sec .note, .sec .statement, .sec .motto, .sec .quote, .sec .fquote, .sec .side-statement, .journey li > span:last-child, .lppc li > span:last-child"
     ),
     "rise"
   );

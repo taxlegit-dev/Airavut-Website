@@ -41,9 +41,9 @@ function InquirySection() {
         <div className="split">
           <div className="col" style={{ maxWidth: "none" }}>
             <p className="eyebrow">Start a conversation</p>
-            <h2 className="h2">Start a Conversation with Airavut.</h2>
-            <p className="lede">Airavut Education Ventures is building an integrated performing arts education and skill development platform across schools, examinations, certification and publishing.</p>
-            <p>We welcome conversations with investors, bankers, universities, schools, examination bodies, strategic partners, media and professionals who want to work with the Airavut ecosystem.</p>
+            <h2 className="h2">Start a Conversation with Airavut</h2>
+            <p className="lede">Connect with the team behind Airavut&apos;s integrated performing arts education ecosystem.</p>
+            <p>We welcome enquiries from learners, schools, examination bodies, partners, investors, media and professionals.</p>
             <a className="textlink" href="/talk-to-us#talk-to-us-ways">See ways to work together</a>
           </div>
           <InquiryForm otpRequired={otpRequired()} />
@@ -61,9 +61,9 @@ function CareerApplicationSection() {
         <div className="split">
           <div className="col" style={{ maxWidth: "none" }}>
             <p className="eyebrow">Apply now</p>
-            <h2 className="h2" id="career-apply-title">Grow Your Career with Airavut.</h2>
+            <h2 className="h2" id="career-apply-title">Grow Your Career with Airavut</h2>
             <p className="lede">Share a few details about yourself and the role you are interested in. It takes about three minutes.</p>
-            <p>We review every application across teaching, academic, operations, examinations, publishing and technology roles. If your profile matches a current or upcoming opening, our team will contact you directly.</p>
+            <p>We review applications across teaching, academics, operations, examinations, publishing and technology. If your profile matches an opening, our team will contact you.</p>
             <a className="textlink" href="#career-why">See the roles we hire for</a>
           </div>
           <CareerApplicationForm otpRequired={otpRequired()} />
