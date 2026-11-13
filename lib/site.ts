@@ -22,6 +22,20 @@ export const pages = {
     description:
       "Discover Airavut’s ISO-certified quality framework and performing arts examination and certification pathways."
   },
+  exams: {
+    slug: "exams",
+    path: "/exams",
+    title: "Ikigai Exams & Certifications | Performing Arts Assessment & Certification | Airavut",
+    description:
+      "Ikigai Exams & Certifications is Airavut’s framework for performing arts examinations, skill assessment, grading, certification and employment readiness."
+  },
+  publishing: {
+    slug: "publishing",
+    path: "/publishing",
+    title: "Ikigai Publishing | Course Books, Exam Books & Learning Resources | Airavut",
+    description:
+      "Ikigai Publishing turns the Airavut methodology into course books, exam books, syllabi and teaching resources for students, educators and institutions."
+  },
   leadership: {
     slug: "leadership",
     path: "/leadership",
