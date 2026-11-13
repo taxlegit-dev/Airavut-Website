@@ -5,6 +5,7 @@ import type { PageSlug } from "@/lib/site";
 import { InquiryForm } from "@/components/InquiryForm";
 import { CareerApplicationForm } from "@/components/CareerApplicationForm";
 import { otpRequired } from "@/lib/otp";
+import { withVerticalSiteLinks } from "@/lib/verticals";
 import Image from "next/image";
 
 // Only navigations started by SiteInteractions carry the "page" type, so
@@ -19,7 +20,7 @@ const slots: Record<string, () => ReactNode> = {
 const slotPattern = new RegExp(`(${Object.keys(slots).join("|")})`);
 
 export async function ContentPage({ slug }: { slug: PageSlug }) {
-  const html = withLayeredHeroArt(await getSiteFragment(slug));
+  const html = withVerticalSiteLinks(withLayeredHeroArt(await getSiteFragment(slug)));
   const parts = html.split(slotPattern);
 
   return (
